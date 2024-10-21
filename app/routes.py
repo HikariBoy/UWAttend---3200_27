@@ -723,7 +723,7 @@ def student():
     if not comments_enabled :
        comments_label = "Multiple sign in/out time log"
 
-    return flask.render_template('student.html', form=form, student=student_info, attendance=attendance_record, consent_required=consent_required, comments_enabled=comments_enabled, marks_enabled=marks_enabled, comments_label=comments_label)
+    return flask.render_template('student.html', form=form, student=student_info, attendance=attendance_record, consent_required=consent_required, comments_enabled=comments_enabled, marks_enabled=marks_enabled, comments_label=comments_label,comments=comment_list)
 
 @app.route('/remove_from_session', methods=['GET'])
 @login_required
