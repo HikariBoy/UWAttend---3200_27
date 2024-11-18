@@ -11,6 +11,14 @@ To run UWAttend on your own machine, you must have the following dependencies in
 - **Python 3.x:** Required to run the application
 - **Pip:** Python's package installer
 - **sqlcipher** Required to encrypt and decrypt the database
+# on an AWS EC2 instance install git
+sudo yum install git
+
+# use WINSCP to copy the filename.pem file to the EC2 instance
+# make the file read-write only by the ownder
+chmod 600 filename .pem
+# add the passkey to ssh
+ssh-add ./path/filename.pem
 
 ## Installation
 ### Clone the Repository
@@ -26,7 +34,7 @@ cd UWAttend
 
 ``` shell
 python3 -m venv venv
-source /venv/vin/activate
+source ./venv/bin/activate
 ```
 
 2. Install the required dependencies:
