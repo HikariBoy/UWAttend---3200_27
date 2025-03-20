@@ -69,6 +69,20 @@ USERTYPE="admin"
 - `SECRET_KEY` - The key to initialise SQLalchemy
 - `DATABASE_PASSWORD` - The password that will be used to encrypt `app.db`
 
+If running the app in development without the required setup for emails, set USE_MOCK_EMAIL to 'true' (a string).
+When an email is 'sent' in this mode, the link (create account or reset password) is instead printed to the terminal, and can be used as usual:
+
+``` shell
+USE_MOCK_EMAIL='true'
+```
+
+If proper email function should be used (i.e. where AWS is set up), unset this environment variable, or set it to anything other than 'true' (e.g. 'false'):
+
+``` shell
+unset USE_MOCK_EMAIL
+USE_MOCK_EMAIL='false'
+```
+
 ### Database Setup
 1. Initialise the Database Schema:
 
