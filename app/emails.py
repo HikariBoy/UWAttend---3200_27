@@ -53,6 +53,9 @@ def send_email_ses(sender, recipient, type):
     else: 
         return False
     
+    if (os.environ.get('USE_MOCK_EMAIL') == 'true') :
+        return True
+    
     ses_client = boto3.client(
         'ses',
         region_name="ap-southeast-1",  
@@ -99,6 +102,9 @@ def send_email_ses(sender, recipient, type):
 
 def get_welcome_email_details(recipient_encoded, token):
     link = f"https://uwaengineeringprojects.com/create_account?email={recipient_encoded}&token={token}"
+
+    if (os.environ.get('USE_MOCK_EMAIL') == 'true') :
+        print(f"Link: http://127.0.0.1:5000/create_account?email={recipient_encoded}&token={token}")
 
     subject = "Welcome to UWAttend"  
     
@@ -180,6 +186,9 @@ def get_welcome_email_details(recipient_encoded, token):
 
 def get_forgot_password_email_details(recipient_encoded, token):
     link = f"https://uwaengineeringprojects.com/reset_password?email={recipient_encoded}&token={token}"
+
+    if (os.environ.get('USE_MOCK_EMAIL') == 'true') :
+        print(f"Link: http://127.0.0.1:5000/reset_password?email={recipient_encoded}&token={token}")
 
     subject = "Password Reset Request"
 
