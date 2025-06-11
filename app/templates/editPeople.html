@@ -61,14 +61,24 @@
 		<div class="col-md-8 col-12">
 			<h3 class="text-center">{% if type == "students" %} Student {% else %} Facilitator {% endif %} list for
 				unit: {{ unit.unitCode }}</h3>
+			{% if type == "facilitators" %}
+			<p class="text-center">If the facilitator's name is placeholder placeholder, they likely haven't set up there account yet. Click resend to resend the welcome email.
+			</p>
+			{% endif %}
 			<div class="container">
 				{% if type=="students" %}
 				{% for student in students %}
 				<!-- onlick re-route to student page for this specific student -->
 				<div class="row outline-table text-center py-1 d-flex align-items-center">
-					<span class="col">{{student.number }}</span>
+					<span class="col-4">{{student.number }}</span>
 					<span class="col">{{student.name }}</span>
-					<span class="col">
+					<span class="col-2">
+						<form action="{{ url_for('deleteStudent') + '?unit_id='+unit_id+'&student_id='+student.id }}"
+							method="POST">
+							<button class="py-1 btn btn-danger" type="submit">Delete</button>
+						</form>
+					</span>
+					<span class="col-2">
 						<form action="{{ url_for('deleteStudent') + '?unit_id='+unit_id+'&student_id='+student.id }}"
 							method="POST">
 							<button class="py-1 btn btn-danger" type="submit">Delete</button>
@@ -80,9 +90,16 @@
 				{% for facilitator in facilitators %}
 				<!-- onlick re-route to student page for this specific student -->
 				<div class="row outline-table text-center py-1 d-flex align-items-center">
-					<span class="col">{{ facilitator.email }}</span>
-					<span class="col">{{ facilitator.name }}</span>
-					<span class="col">
+					<span class="col-4">{{ facilitator.email }}</span>
+					<span class="col-4">{{ facilitator.name }}</span>
+					<span class="col-2">
+						<form
+							action="{{ url_for('deleteFacilitator') + '?unit_id='+unit_id+'&facilitator_id='+facilitator.email }}"
+							method="POST">
+							<button class="py-1 btn btn-secondary" type="submit">Resend Email</button>
+						</form>
+					</span>
+					<span class="col-2">
 						<form
 							action="{{ url_for('deleteFacilitator') + '?unit_id='+unit_id+'&facilitator_id='+facilitator.email }}"
 							method="POST">
