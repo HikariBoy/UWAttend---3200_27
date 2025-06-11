@@ -3,11 +3,16 @@
 	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
 			<div class="modal-header border-0 pb-0 d-flex justify-content-center ">
-				<h1 class="modal-title fs-4" id="confirmSessionEditsModalLabel">Do you want to make changes?</h1>
+				<h1 class="modal-title fs-4" id="confirmSessionEditsModalLabel">Edit the current session details</h1>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<div id="confirmSessionEditsModalText" class="modal-body text-center">
-				You are editing an existing session - not configuring a new one.
+				You are editing the details of the current session, with the following changes:
+				<span id="actualEditChanges"></span>
+				<br>
+				By confirming, you will edit the session details for students you have signed in only.
+				<br>
+				If you instead want to configure a new session, first exit that session (from the home page), then configure a new one.
 			</div>
 			<div class="modal-footer border-0 pt-0 d-flex justify-content-center">
 				<button type="button" class="btn btn-danger w-30 py-2" onclick="confirmChanges()">Make Changes</button>

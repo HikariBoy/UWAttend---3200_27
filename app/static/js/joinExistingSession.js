@@ -15,7 +15,7 @@ $("#submit").click(function (e) {
 
 function confirmSessionEdits() {
     let modalTextElement = $("#confirmSessionEditsModalText").get(0);
-    modalTextElement.innerHTML = "warning message here... ";
+    //modalTextElement.innerHTML = "warning message here... ";
     $('#confirmSessionEditsModal').modal('show');
 }
 
