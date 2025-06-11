@@ -14,9 +14,40 @@ $("#submit").click(function (e) {
 });
 
 function confirmSessionEdits() {
-    let modalTextElement = $("#confirmSessionEditsModalText").get(0);
-    //modalTextElement.innerHTML = "warning message here... ";
-    $('#confirmSessionEditsModal').modal('show');
+    let modalTextElement = $("#confirmSessionEditsModalChangesText").get(0);
+
+    //retrieve current session details
+    const currentSessionName = $("#currentSessionName").get(0).innerHTML;
+    const currentSessionTime = $("#currentSessionTime").get(0).innerHTML;
+    const currentSessionDate = $("#currentSessionDate").get(0).innerHTML;
+
+    //retrieve new session details
+    const newSessionName = $("#session_name").get(0).value;
+    const newSessionTime = $("#session_time").get(0).value;
+    const newSessionDate = $("#session_date").get(0).value;
+
+    modalTextElement.innerHTML = "";
+    let changesMade = false;
+
+    if (currentSessionName != newSessionName) {
+        modalTextElement.innerHTML += "<br>" + currentSessionName + " > " + newSessionName;
+        changesMade = true;
+    }
+    if (currentSessionTime != newSessionTime) {
+        modalTextElement.innerHTML += "<br>" + currentSessionTime + " > " + newSessionTime;
+        changesMade = true;
+
+    }
+    if (currentSessionDate != newSessionDate) {
+        modalTextElement.innerHTML += "<br>" + currentSessionDate + " > " + newSessionDate;
+        changesMade = true;
+    }
+
+    if (changesMade) {
+        $('#confirmSessionEditsModal').modal('show');
+    }
+
+
 }
 
 function confirmChanges() {
