@@ -2,14 +2,26 @@
 $("#submit").click(function (e) {
 	e.preventDefault();  // Prevent the default form submission
 
-    confirmSessionEdits();
-
+    const form = document.getElementById("sessionForm");
+    let updateStatus = form.getAttribute("data-update");
+    console.log(updateStatus);
+    if (updateStatus === 'true') {
+        confirmSessionEdits();
+    }
+    else {
+        checkSessionExists();
+    }
 });
 
 function confirmSessionEdits() {
     let modalTextElement = $("#confirmSessionEditsModalText").get(0);
     modalTextElement.innerHTML = "warning message here... ";
     $('#confirmSessionEditsModal').modal('show');
+}
+
+function confirmChanges() {
+    $('#confirmSessionEditsModal').modal('hide');
+    checkSessionExists();
 }
 
 function checkSessionExists() {
