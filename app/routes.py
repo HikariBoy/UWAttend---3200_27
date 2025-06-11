@@ -483,7 +483,7 @@ def editFacilitators():
 def deleteFacilitator():
     unit_id = flask.request.args.get('unit_id')
     unit = GetUnit(unitID=unit_id)[0]
-    if unit not in current_user.unitsCoordinate: #!check this works
+    if unit not in current_user.unitsCoordinate:
         flask.flash("Unit not found","error")
         return flask.redirect(url_for('unitconfig'))
     
@@ -495,6 +495,24 @@ def deleteFacilitator():
     flask.flash("Error deleting facilitator", "error")
     return flask.redirect(url_for('editFacilitators', id=unit_id))
 
+@app.route('/resend_email_to_facilitator', methods=['POST'])
+@login_required
+def resend_email_to_facilitator() :
+    unit_id = flask.request.args.get('unit_id')
+    unit = GetUnit(unitID=unit_id)[0]
+    if unit not in current_user.unitsCoordinate:
+        flask.flash("Unit not found","error")
+        return flask.redirect(url_for('unitconfig'))
+    
+    facilitator_email = flask.request.args.get('facilitator_id')
+    facilitator = GetUser(email=facilitator_email)
+    if facilitator is not None and unit in facilitator.unitsFacilitate :
+        send_email_ses("noreply@uwaengineeringprojects.com", facilitator_email, 'welcome')
+        flask.flash("Welcome email successfully sent","success")
+        return flask.redirect(url_for('editFacilitators', id=unit_id))
+    
+    flask.flash("Error sending email", "error")
+    return flask.redirect(url_for('editFacilitators', id=unit_id))
 
 # add users
 @app.route('/admin', methods=['GET', 'POST'])
