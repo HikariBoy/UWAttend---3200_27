@@ -1010,10 +1010,14 @@ def add_facilitator():
     print(unit)
 
     if valid_email(email):
-        if unit in current_user.unitsCoordinate: 
-            AddUser(email, "placeholder", "placeholder", generate_temp_password(), "facilitator")
-            AddUnitToFacilitator(email, unit_id)
-            send_email_ses("noreply@uwaengineeringprojects.com", email, 'welcome')
+        if unit in current_user.unitsCoordinate:
+            user = GetUser(email=email)
+            if user is None :
+                AddUser(email, "placeholder", "placeholder", generate_temp_password(), "facilitator")
+                send_email_ses("noreply@uwaengineeringprojects.com", email, 'welcome')
+                user = GetUser(email=email)
+            if unit not in user.unitsFacilitate :
+                AddUnitToFacilitator(email, unit_id)
 
     facilitators = GetUnit(unitID=unit_id)[0].facilitators
     facilitator_list = []
