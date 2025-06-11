@@ -2,9 +2,15 @@
 $("#submit").click(function (e) {
 	e.preventDefault();  // Prevent the default form submission
 
-    checkSessionExists();
+    confirmSessionEdits();
 
 });
+
+function confirmSessionEdits() {
+    let modalTextElement = $("#confirmSessionEditsModalText").get(0);
+    modalTextElement.innerHTML = "warning message here... ";
+    $('#confirmSessionEditsModal').modal('show');
+}
 
 function checkSessionExists() {
 
