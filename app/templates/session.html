@@ -5,9 +5,11 @@
 <div class="mt-4 mx-md-5 mx-2 d-flex flex-column align-items-center">
     <h2>Session Configuration</h2>
     {% if update %}
-    <p class="text-center">You are already in an active session.</p>
+    <p class="text-center">You are already in an active session.<br>
+        To configure a new session, first exit this session from the home page.
+    </p>
     <h4 class="text-center">{{ unit }}<span id="currentSessionName">{{ currentSession.sessionName }}</span><span id="currentSessionTime">{{ currentSession.sessionTime }}</span><span id="currentSessionDate">{{ currentSession.sessionDate }}</span></h4>
-    <p>Edit the session configuration below.</p>
+    <p class="text-center">Edit the current session details below.</p>		
     {% else %}
     <p class="text-center">
         You have no active session. <br> Configure a new session below to view your class list.
