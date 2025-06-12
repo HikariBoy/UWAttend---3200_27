@@ -24,7 +24,7 @@ function checkStudentInOtherSession() {
                 $('#confirmTransferStudentModal').modal('show');
             }
             // if the student isn't already in a different class, just submit the form
-            else if (data['result'] === "false") {
+            else if (data['result'] === "false" || data['result'] === "sign_out") {
                 submitStudentSignInForm();
             }
             
