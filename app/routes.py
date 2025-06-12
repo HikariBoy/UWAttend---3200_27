@@ -290,13 +290,13 @@ def checkstudentinothersession():
         # get list of other (existing) sessions with same unit ID, session time and session date
         # check through attendance's with those sessionIDs and check if the studentID is there
 
-        existingClassName = checkStudentInOtherSession(studentID, session_id)
+        otherCurrentSessions = checkStudentInOtherSessions(studentID, session_id)
 
         # if the student ID appears, and they haven't been signed out...
-        if existingClassName is not None :
+        if len(otherCurrentSessions) > 0 :
             log_message("Student already in another session.")
             
-            return flask.jsonify({'result': "true", 'existingSessionName': existingClassName})
+            return flask.jsonify({'result': "true", 'existingSessionName': otherCurrentSessions[0]['sessionName']})
         
         else :
             log_message("Student not already in another session")
@@ -1032,6 +1032,14 @@ def add_student():
                     status = RemoveSignOutTime(attendanceID=existing_attendance[0].attendanceID)
                 return flask.redirect(flask.url_for('home'))
             
+            otherCurrentSessions = checkStudentInOtherSessions(studentID, session_id)
+
+            if otherCurrentSessions is not None :
+                # sign them out of the other sesssion that they are in
+                for s_dict in otherCurrentSessions :
+                    status = SignStudentOut(s_dict['attendanceID'])
+                    print('signed student out of that other class...')
+
             # consent will be none if it is already yes or not required i.e. no changes required
             if consent_status != "none" :
                 student.consent = "yes" if consent_status == "yes" else "no"

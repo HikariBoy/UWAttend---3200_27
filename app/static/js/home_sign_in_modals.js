@@ -19,7 +19,7 @@ function checkStudentInOtherSession() {
                 const existingSessionName = data['existingSessionName'];
 
                 let modalTextElement = $("#confirmTransferStudentModalExistingSessionText").get(0);
-                modalTextElement.innerHTML = "This student is currently signed into " + existingSessionName + ", which is currently running, and they haven't been signed out yet."
+                modalTextElement.innerHTML = "This student is signed into <b>" + existingSessionName + "</b>, which is currently running, and they haven't been signed out yet."
 
                 $('#confirmTransferStudentModal').modal('show');
             }
