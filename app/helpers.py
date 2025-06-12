@@ -153,3 +153,7 @@ def removeSessionCookie() :
         print(f"removing session cookie for session ID {session.pop('session_id')}")
         session.pop('session_id', default=None)
         print("successfully removed session cookie")
+
+def checkStudentInOtherSession(studentID, sessionID) :
+    
+    return 'Lab'

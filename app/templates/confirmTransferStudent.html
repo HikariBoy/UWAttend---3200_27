@@ -1,0 +1,20 @@
+<div class="modal fade" id="confirmTransferStudentModal" tabindex="-1" aria-labelledby="confirmTransferStudentModalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header border-0 pb-0 d-flex justify-content-center ">
+				<h1 class="modal-title fs-4" id="confirmTransferStudentModalLabel">Edit the current session details</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div id="confirmTransferStudentModalText" class="modal-body text-center">
+				You are editing the details of the current session, with the following changes:
+				<p id="confirmTransferStudentModalExistingSessionText"></p>
+				<br>
+				By confirming, this student will be signed out of the former class and signed into this one.
+			</div>
+			<div class="modal-footer border-0 pt-0 d-flex justify-content-center">
+				<button type="button" class="btn btn-danger w-30 py-2" onclick="submitStudentSignInForm()">Confirm Sign In</button>
+			</div>
+		</div>
+	</div>
+</div>

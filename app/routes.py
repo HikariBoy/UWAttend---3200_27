@@ -257,6 +257,48 @@ def checksessionexists():
     
     else :
         return flask.jsonify({'result': "validateError"})
+    
+
+
+@app.route('/checkstudentinothersession', methods=['POST'])
+@login_required
+def checkstudentinothersession():
+    form = StudentSignInForm()
+
+    log_message("/checkstudentinothersession")
+
+    if form.validate_on_submit():
+        studentID = form.studentID.data
+
+        session_id = flask.session.get('session_id')
+
+        session = GetSession(sessionID=session_id)
+
+        if not session:
+            log_message("/add_student Error loading session")
+            flask.flash("Error loading session") 
+            return flask.redirect(flask.url_for('home'))
+        
+        session = session[0]
+
+        # get list of other (existing) sessions with same unit ID, session time and session date
+        # check through attendance's with those sessionIDs and check if the studentID is there
+
+        existingClassName = checkStudentInOtherSession(studentID, session_id)
+
+        # if the student ID appears, and they haven't been signed out...
+        if existingClassName is not None :
+            log_message("Student already in another session.")
+            
+            return flask.jsonify({'result': "true", 'existingSessionName': existingClassName})
+        
+        else :
+            log_message("Student not already in another session")
+            return flask.jsonify({'result': "false" })
+    
+    else :
+        return flask.jsonify({'result': "validateError"})
+
 
 #ADMIN - /unitconfig /
 @app.route('/unitconfig', methods=['GET', 'POST'])
@@ -954,8 +996,6 @@ def add_student():
         # Handle form submission
         studentID = form.studentID.data
         consent_status = form.consent_status.data
-        # sessionID = form.sessionID.data
-
 
         session_id = flask.session.get('session_id')
 
