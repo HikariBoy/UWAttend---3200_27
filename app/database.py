@@ -265,6 +265,15 @@ def GetSessionForExport(sessionID = None, unitID = None):
 
     return attendance_records
 
+def GetCurrentSessions(unitID, sessionTime, sessionDate) :
+
+    query = db.session.query(Session)
+    query = query.filter(Session.unitID == unitID, Session.sessionTime == sessionTime, Session.sessionDate == sessionDate)
+    records = query.all()
+    
+    return records
+
+
 def GetStudent(unitID = None, studentID = None, studentNumber = None):
 
     query = db.session.query(Student)

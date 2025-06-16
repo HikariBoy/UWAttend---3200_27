@@ -257,6 +257,54 @@ def checksessionexists():
     
     else :
         return flask.jsonify({'result': "validateError"})
+    
+
+
+@app.route('/checkstudentinothersession', methods=['POST'])
+@login_required
+def checkstudentinothersession():
+    form = StudentSignInForm()
+
+    log_message("/checkstudentinothersession")
+
+    if form.validate_on_submit():
+        studentID = form.studentID.data
+
+        session_id = flask.session.get('session_id')
+
+        session = GetSession(sessionID=session_id)
+
+        if not session:
+            log_message("/add_student Error loading session")
+            flask.flash("Error loading session") 
+            return flask.redirect(flask.url_for('home'))
+        
+        session = session[0]
+
+        # check if student has existing attendance (in this class) i.e this is not a sign-in, but a sign-out
+        existing_attendance = GetAttendance(input_sessionID=session_id, studentID=studentID)
+
+        if existing_attendance :
+            return flask.jsonify({'result': "sign_out"})
+
+        # get list of other (existing) sessions with same unit ID, session time and session date
+        # check through attendance's with those sessionIDs and check if the studentID is there
+
+        otherCurrentSessions = checkStudentInOtherSessions(studentID, session_id)
+
+        # if the student ID appears, and they haven't been signed out...
+        if len(otherCurrentSessions) > 0 :
+            log_message("Student already in another session.")
+            
+            return flask.jsonify({'result': "true", 'existingSessionName': otherCurrentSessions[0]['sessionName']})
+        
+        else :
+            log_message("Student not already in another session")
+            return flask.jsonify({'result': "false" })
+    
+    else :
+        return flask.jsonify({'result': "validateError"})
+
 
 #ADMIN - /unitconfig /
 @app.route('/unitconfig', methods=['GET', 'POST'])
@@ -954,8 +1002,6 @@ def add_student():
         # Handle form submission
         studentID = form.studentID.data
         consent_status = form.consent_status.data
-        # sessionID = form.sessionID.data
-
 
         session_id = flask.session.get('session_id')
 
@@ -986,6 +1032,14 @@ def add_student():
                     status = RemoveSignOutTime(attendanceID=existing_attendance[0].attendanceID)
                 return flask.redirect(flask.url_for('home'))
             
+            otherCurrentSessions = checkStudentInOtherSessions(studentID, session_id)
+
+            if otherCurrentSessions is not None :
+                # sign them out of the other sesssion that they are in
+                for s_dict in otherCurrentSessions :
+                    status = SignStudentOut(s_dict['attendanceID'])
+                    print('signed student out of that other class...')
+
             # consent will be none if it is already yes or not required i.e. no changes required
             if consent_status != "none" :
                 student.consent = "yes" if consent_status == "yes" else "no"

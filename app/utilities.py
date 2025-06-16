@@ -13,6 +13,27 @@ from .database import *
 from .emails import *
 import pandas as pd
 
+def checkStudentInOtherSessions(studentID, sessionID) :
+
+    session = GetSession(sessionID)
+
+    if session is not None and len(session) != 0:
+        session = session[0]
+
+    currentSessions = GetCurrentSessions(session.unitID, session.sessionTime, session.sessionDate)
+
+    otherCurrentSessions = []
+
+    for s in currentSessions :
+        if s.sessionName != session.sessionName :
+            attendance_records = GetAttendance(input_sessionID=s.sessionID)
+            for a in attendance_records :
+                if str(a.studentID) == studentID and a.signOutTime is None :
+                    otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : s.sessionName})
+
+    
+    return otherCurrentSessions
+
 # Set of functions used to read and populate students into the database from a csv file.
 # Checklist for future
 # 1. DONE Connect to actual database for population
