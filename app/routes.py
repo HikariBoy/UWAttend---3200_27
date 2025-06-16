@@ -769,42 +769,45 @@ def student():
     student = GetStudent(studentID=student_id)
 
     if not student:
-        log_message("/student error student not found")
-        flask.flash("Error - Student not found")
+        database_error('student', 'Student')
         return flask.redirect(flask.url_for('home'))
-    
-    student = student[0]
+    else :
+        student = student[0]
 
     session_id = flask.session.get('session_id')
     current_session = GetSession(sessionID=session_id)
 
     if not current_session:
-        log_message("/student Error loading session")
-        flask.flash("Error loading session") 
+        database_error('student', 'Session')
         return flask.redirect(flask.url_for('home'))
-    
-    current_session = current_session[0]
+    else :
+        current_session = current_session[0]
 
     unit = GetUnit(unitID=current_session.unitID)
 
     if not unit:
-        log_message("/student Error loading unit")
-        flask.flash("Error loading unit") 
+        database_error('student', 'Unit')
         return flask.redirect(flask.url_for('home'))
-    
-    unit = unit[0]
+    else:
+        unit = unit[0]
+
     comment_suggestions = unit.commentSuggestions
     comment_list = comment_suggestions.split('|')
 
-    attendance_record = GetAttendance(input_sessionID=current_session.sessionID, studentID=student_id)[0] 
+    attendance_record = GetAttendance(input_sessionID=current_session.sessionID, studentID=student_id)
+
+    if not attendance_record :
+        database_error('student', 'Attendance')
+        return flask.redirect(flask.url_for('home'))
+    else:
+        attendance_record = attendance_record[0]
 
     student_info = generate_student_info(student, attendance_record)
     
-
     # check if consent, comments and marks are required
-    consent_required = GetUnit(unitID=current_session.unitID)[0].consent
-    marks_enabled = GetUnit(unitID=current_session.unitID)[0].marks
-    comments_enabled = GetUnit(unitID=current_session.unitID)[0].comments
+    consent_required = unit.consent
+    marks_enabled = unit.marks
+    comments_enabled = unit.comments
     comments_label = form.comments.label.text
 
     if not comments_enabled :
@@ -825,11 +828,10 @@ def remove_from_session():
     current_session = GetSession(session)
 
     if not current_session:
-        log_message("/remove_from_session Error loading session")
-        flask.flash("Error loading session") 
+        database_error('remove_from_session', 'Session')
         return flask.redirect(flask.url_for('home'))
-    
-    current_session = current_session[0]
+    else :
+        current_session = current_session[0]
 
     status = RemoveStudentFromSession(student_id, current_session.sessionID)
 
@@ -924,12 +926,15 @@ def reset_password():
 
     if not valid_token:
         flask.flash("Error - Invalid token")
-        return flask.redirect(flask.url_for('login'))
-
+        return flask.redirect(flask.url_for('login', 'error'))
     email = urllib.parse.unquote(email_encoded)
 
     user = GetUser(email = email)
-    
+
+    if user is None :
+        flask.flash('Error - Invalid User')
+        return flask.redirect(flask.url_for('login'), 'error')
+
     form = ResetPasswordForm()
 
     if form.validate_on_submit():
@@ -951,7 +956,7 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = database.GetUser(email = form.username.data)                
+        user = GetUser(email = form.username.data)                
 
         if user is None or not user.is_password_correct(form.password.data):
             log_message("/login invalid password or username")
@@ -974,8 +979,7 @@ def edit_student_details():
     current_session = GetSession(session)
 
     if not current_session:
-        log_message("/edit_student_details Error loading session")
-        flask.flash("Error loading session") 
+        database_error('edit_student_details', 'Session')
         return flask.redirect(flask.url_for('home'))
     
     current_session = current_session[0]
@@ -1067,8 +1071,7 @@ def add_student():
             unit = GetUnit(unitID=unitID)
 
             if not unit :
-                log_message("/addstudent Error loading unit details")
-                flask.flash("Error loading unit details")
+                database_error('add_student', 'Unit')
                 return flask.redirect(flask.url_for('home'))
             
             unit = unit[0]
@@ -1083,8 +1086,7 @@ def add_student():
             return flask.redirect(flask.url_for('home'))
 
         else:
-            log_message("/addstudent Invalid student information")
-            flask.flash("Invalid student information", 'error')
+            database_error('add_student', 'Student')
 
     # Redirect back to home page when done
     return flask.redirect(flask.url_for('home'))
@@ -1093,13 +1095,17 @@ def add_student():
 def add_facilitator():
     email = flask.request.form['resetEmail']
     unit_id = flask.request.args.get('id')
-    print(unit_id)
 
     if not unit_id:
         return flask.redirect(flask.url_for('home'))
     
-    unit = GetUnit(unitID=unit_id)[0]
-    print(unit)
+    unit = GetUnit(unitID=unit_id)
+
+    if not unit :
+        database_error('add_facilitator', 'Unit')
+        return redirect(url_for('updateunit'))
+    
+    unit = unit[0]
 
     if valid_email(email):
         if unit in current_user.unitsCoordinate:
