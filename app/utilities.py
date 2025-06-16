@@ -28,8 +28,9 @@ def checkStudentInOtherSessions(studentID, sessionID) :
         if s.sessionName != session.sessionName :
             attendance_records = GetAttendance(input_sessionID=s.sessionID)
             for a in attendance_records :
-                if str(a.studentID) == studentID :
+                if str(a.studentID) == studentID and a.signOutTime is None :
                     otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : s.sessionName})
+
     
     return otherCurrentSessions
 
