@@ -42,8 +42,8 @@ def log_message(message):
 
 def database_error(route, db_table) :
 
-    log_message(route + " Error loading " + db_table)
-    flask.flash("Error loading " + db_table)
+    log_message('/' + route + " Error loading " + db_table)
+    flask.flash("Error loading " + db_table, 'error')
 
 
 def checkStudentInOtherSessions(studentID, sessionID) :

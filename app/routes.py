@@ -26,10 +26,9 @@ def home():
 
     current_session = GetSession(session_id)
 
-    if len(current_session) > 0 :
+    if current_session :
         current_session = current_session[0]
     else :
-        database_error("/home", 'Session')
         return redirect(url_for('session')) 
 
     log_message("/home - Session : " + current_session.sessionName)
@@ -79,7 +78,7 @@ def home():
     if len(current_unit) > 0 :
         current_unit = current_unit[0]
     else :
-        database_error("/home", 'Unit')
+        database_error("home", 'Unit')
         return redirect(url_for('session')) 
     
     consent_required = current_unit.consent
@@ -129,15 +128,14 @@ def session():
                 log_message("Session doesn't exist... creating new session.")
                 current_session = AddSession(unit_id, session_name, session_time, session_date)
                 if current_session is None :
-                    log_message("An error has occurred. The session was not created. Please try again.")
-                    return flask.redirect(flask.url_for('home'))
-
-            
+                    flask.flash("Unable to create session", "error")
+                    return flask.redirect(flask.url_for('session'))
 
             flask.session['session_id'] = current_session.sessionID
 
             # Redirect back to home page with the session ID as a query parameter
             return flask.redirect(flask.url_for('home'))
+        
         else :
             set_session_form_select_options(form)
             return flask.render_template('session.html', form=form, perth_time=formatted_perth_time, update=False, errorMsg="Please select a valid option for all fields.")
@@ -172,7 +170,6 @@ def updatesession():
 
         log_message("/updatesession Submitting form : " + "[" + str(session_name) + "] [" + str(session_time) + "] [" + str(unit_id) + "] [" + str(session_date) + "]" )
 
-
         # Check if the session already exists
         new_session = GetUniqueSession(unit_id, session_name, session_time, session_date)
 
@@ -182,11 +179,9 @@ def updatesession():
             log_message("Session doesn't exist... creating new session with new details.")
             new_session = AddSession(unit_id, session_name, session_time, session_date)
             if new_session is None :
-                log_message("An error has occurred. The session was not created. Please try again.")
-                return flask.redirect(flask.url_for('home'))
-
-        
-
+                flask.flash("Unable to update session", 'error')
+                return redirect(url_for('session'))
+            
         # Update attendance records with current session id and where facilitator is current user
         attendance_records = GetAttendanceByIDAndFacilitator(current_session_id, current_user.userID)
 
@@ -198,12 +193,21 @@ def updatesession():
         # Update session cookie
         flask.session['session_id'] = new_session.sessionID
 
+        flask.flash("Session updated successfully", "success")
+
         # Redirect back to home page
         return flask.redirect(flask.url_for('home'))
 
     # set updatesession form select fields to match current session's details
     current_session = existing_session[0]
-    current_unit = GetUnit(unitID=current_session.unitID)[0]
+    current_unit = GetUnit(unitID=current_session.unitID)
+
+    if current_unit :
+        current_unit = current_unit[0]
+    else :
+        database_error("/updatesession", 'Unit')
+        return redirect(url_for('home')) 
+
     set_updatesession_form_select_options(current_session, current_unit, form)
 
     return flask.render_template('session.html', form=form, perth_time=formatted_perth_time, update=True, currentSession=current_session, unit=current_unit.unitCode)
@@ -255,10 +259,9 @@ def checkstudentinothersession():
         session = GetSession(sessionID=session_id)
 
         if not session:
-            log_message("/add_student Error loading session")
-            flask.flash("Error loading session") 
-            return flask.redirect(flask.url_for('home'))
-        
+            database_error('checkstudentinothersession', 'Session')
+            return flask.jsonify({'result': "Error loading Session"})
+    
         session = session[0]
 
         # check if student has existing attendance (in this class) i.e this is not a sign-in, but a sign-out
@@ -266,9 +269,6 @@ def checkstudentinothersession():
 
         if existing_attendance :
             return flask.jsonify({'result': "sign_out"})
-
-        # get list of other (existing) sessions with same unit ID, session time and session date
-        # check through attendance's with those sessionIDs and check if the studentID is there
 
         otherCurrentSessions = checkStudentInOtherSessions(studentID, session_id)
 
@@ -319,18 +319,20 @@ def unitconfig():
 @app.route('/updateunit', methods=['GET', 'POST'])
 @login_required
 def updateunit():
+
+    log_message("/updateunit")
     if current_user.userType == 'facilitator':
         return flask.redirect('home')
     
     if 'id' not in flask.request.args:
         return flask.redirect('unitconfig')
     
-    unit_id = flask.request.args.get('id') 
+    unit_id = flask.request.args.get('id')
     unit_data = GetUnit(unitID=unit_id)
     if not unit_data:
         flask.flash("Unit not found", "error")
         return flask.redirect(flask.url_for('unitconfig'))
-    unit = unit_data[0]  
+    unit = unit_data[0]
     if unit not in current_user.unitsCoordinate: #!!! TEST THIS WORKS AS INTENDED (cant access not your own units)
         flask.flash("Unit not found", "error") #Saying that the ID exists is a vulnerability, so we just say it doesnt
         return flask.redirect(flask.url_for('unitconfig'))
@@ -416,7 +418,14 @@ def updateunit():
 @login_required
 def editStudents():
     unit_id = flask.request.args.get('id')
-    unit = GetUnit(unitID=unit_id)[0]
+    unit = GetUnit(unitID=unit_id)
+
+    if not unit :
+        database_error("editStudents", 'Unit')
+        return redirect(url_for('unitconfig'))
+    else :
+        unit = unit[0]
+    
     form = AddStudentForm()
     csv_form = UploadStudentForm()
 
@@ -476,7 +485,14 @@ def uploadStudents():
 @login_required
 def deleteStudent():
     unit_id = flask.request.args.get('unit_id')
-    unit = GetUnit(unitID=unit_id)[0]
+    unit = GetUnit(unitID=unit_id)
+
+    if not unit :
+        database_error('deleteStudent', 'Unit')
+        return redirect(url_for('unitconfig'))
+    else :
+        unit = unit[0]
+
     if unit not in current_user.unitsCoordinate: #!check this works
         flask.flash("Unit not found","error")
         return flask.redirect(url_for('unitconfig'))
@@ -489,30 +505,44 @@ def deleteStudent():
     flask.flash("Error deleting student", "error")
     return flask.redirect(url_for('editStudents', id=unit_id))
 
-@app.route('/editFacilitators', methods=['GET', 'POST'])
+@app.route('/editFacilitators', methods=['GET'])
 @login_required
 def editFacilitators():
     unit_id = flask.request.args.get('id')
-    unit = GetUnit(unitID=unit_id)[0]
-    facilitators = GetUnit(unitID=unit_id)[0].facilitators
+    unit = GetUnit(unitID=unit_id)
+
+    if not unit :
+        database_error('editFacilitators', 'Unit')
+        return redirect(url_for('unitconfig'))
+    else :
+        unit = unit[0]
+
+    facilitators = unit.facilitators
     facilitator_list = []
 
     for facilitator in facilitators:
         info = {
             "name": f"{facilitator.firstName} {facilitator.lastName}",
-            "email": facilitator.email,
+            "email": facilitator.email
         }
         facilitator_list.append(info)
-    #facilitators = GetStudent(unitID = unit_id)
+
     return flask.render_template('editPeople.html', unit_id=str(unit_id), unit=unit, type="facilitators", facilitators=facilitator_list)
 
 @app.route('/deleteFacilitator', methods=['POST'])
 @login_required
 def deleteFacilitator():
     unit_id = flask.request.args.get('unit_id')
-    unit = GetUnit(unitID=unit_id)[0]
+    unit = GetUnit(unitID=unit_id)
+
+    if not unit :
+        database_error('deleteFacilitator', 'Unit')
+        return redirect(url_for('unitconfig'))
+    else :
+        unit = unit[0]
+
     if unit not in current_user.unitsCoordinate:
-        flask.flash("Unit not found","error")
+        flask.flash("Error loading Unit","error")
         return flask.redirect(url_for('unitconfig'))
     
     facilitator_email = flask.request.args.get('facilitator_id')
@@ -527,19 +557,29 @@ def deleteFacilitator():
 @login_required
 def resend_email_to_facilitator() :
     unit_id = flask.request.args.get('unit_id')
-    unit = GetUnit(unitID=unit_id)[0]
+    unit = GetUnit(unitID=unit_id)
+
+    if not unit :
+        database_error('resend_email_to_facilitator', 'Unit')
+        return redirect(url_for('unitconfig'))
+    else :
+        unit = unit[0]
+
     if unit not in current_user.unitsCoordinate:
-        flask.flash("Unit not found","error")
+        flask.flash("Error loading Unit","error")
         return flask.redirect(url_for('unitconfig'))
     
     facilitator_email = flask.request.args.get('facilitator_id')
     facilitator = GetUser(email=facilitator_email)
+
     if facilitator is not None and unit in facilitator.unitsFacilitate :
-        send_email_ses("noreply@uwaengineeringprojects.com", facilitator_email, 'welcome')
-        flask.flash("Welcome email successfully sent","success")
-        return flask.redirect(url_for('editFacilitators', id=unit_id))
+        if send_email_ses("noreply@uwaengineeringprojects.com", facilitator_email, 'welcome') :
+            flask.flash("Welcome email successfully sent","success")
+        else : flask.flash("Error sending email", "error")
+    else :
+        database_error('resend_email_to_facilitator', 'User')
+        return redirect (url_for('editFacilitators', id=unit_id))
     
-    flask.flash("Error sending email", "error")
     return flask.redirect(url_for('editFacilitators', id=unit_id))
 
 # add users
@@ -556,17 +596,18 @@ def admin():
 
     if form.validate_on_submit() and flask.request.method == 'POST': 
 
-        # UPDATE LOGIC TO USE EMAILS
-
         # check user exists
         user = GetUser(email=form.email.data)
-
+        
         # if user doesn't exist, add them
         if user is None:
             log_message("/admin submitting form : [" + str(form.email.data) + "]")
-            AddUser(userType=form.UserType.data, email=form.email.data, firstName="placeholder", lastName="placeholder", passwordHash=generate_temp_password())
-            send_email_ses("noreply@uwaengineeringprojects.com", form.email.data, 'welcome')
-            flask.flash("User added - confirmation email sent!")
+            if AddUser(userType=form.UserType.data, email=form.email.data, firstName="placeholder", lastName="placeholder", passwordHash=generate_temp_password()) :
+                if send_email_ses("noreply@uwaengineeringprojects.com", form.email.data, 'welcome') :
+                    flask.flash("User added - confirmation email sent!", 'success')
+                else : flask.flash("User was added but error sending welcome email - please resend email", 'error')
+
+            else : flask.flash("Failed to add user", 'error')
 
         return flask.redirect(url_for('admin'))
     

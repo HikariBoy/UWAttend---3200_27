@@ -120,7 +120,9 @@ def AddUser(email, firstName, lastName, passwordHash, userType):
     
     except IntegrityError as e:
         db.session.rollback()
-        print(f'An error occurred: {e}')
+        return False
+    
+    return True
 
 def UpdateUser(email, firstName, lastName, passwordHash): # no userType as this should already be set 
 
