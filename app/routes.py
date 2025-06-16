@@ -24,16 +24,14 @@ import pandas as pd
 def home():
     session_id = flask.session.get('session_id')
 
-    current_session = GetSession(session_id) 
-    
-    if current_session:
-        current_session = current_session[0]
-        # Use session_id for further processing
+    current_session = GetSession(session_id)
 
-    if not current_session:
+    if len(current_session) > 0 :
+        current_session = current_session[0]
+    else :
+        database_error("/home", 'Session')
         return redirect(url_for('session')) 
 
-    # log the neccessary info
     log_message("/home - Session : " + current_session.sessionName)
 
     form = StudentSignInForm()
@@ -45,7 +43,7 @@ def home():
     logged_in_student_ids = [str(record.studentID) for record in attendance_records]
 
     # get only the students who have logged in
-    students = GetStudentList(student_ids=logged_in_student_ids) 
+    students = GetStudentList(student_ids=logged_in_student_ids)
 
     student_list = []
     facilitator_list = []
@@ -76,10 +74,15 @@ def home():
 
     student_list.sort(key=lambda x: (x['login'] == "yes", x['time']), reverse=True)
 
-    current_unit = GetUnit(unitID=current_session.unitID)[0]
+    current_unit = GetUnit(unitID=current_session.unitID)
+
+    if len(current_unit) > 0 :
+        current_unit = current_unit[0]
+    else :
+        database_error("/home", 'Unit')
+        return redirect(url_for('session')) 
     
-    # check if consent is required
-    consent_required = GetUnit(unitID=current_session.unitID)[0].consent
+    consent_required = current_unit.consent
     
     return flask.render_template('home.html', form=form, students=student_list, current_session=current_session, total_students=len(student_list), signed_in=signed_in_count, session_num=current_session.sessionID, current_unit=current_unit, consent_required=consent_required, num_facilitators=len(facilitator_list)) 
 	

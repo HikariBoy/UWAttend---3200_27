@@ -237,11 +237,9 @@ def GetSession(sessionID = None, unitID = None, return_all = False):
     elif unitID is not None:
         query = query.filter(Session.unitID == unitID)
     elif not return_all:
-        return
-        # no parameters were supplied.
-        # print("You did not submit a parameter to use so returning all session records")
+        # no parameters were supplied, and return_all not true so returning an empty list
+        return []
 
-    
     attendance_records = query.all()
     
     return attendance_records
@@ -307,7 +305,6 @@ def GetStudentList(student_ids):
         # no parameters were supplied.
         print("You did not submit a parameter to use so returning all student records")
 
-    
     students = query.all()
     
     return students
