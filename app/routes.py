@@ -15,29 +15,6 @@ from datetime import datetime, date
 import sqlalchemy as sa
 import pandas as pd
 
-# Custom logging function
-def log_message(message):
-
-    client_ip = flask.request.remote_addr 
-    
-    # Ensure logs directory exists
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
-    # Format the log message with a timestamp
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-   
-
-    if current_user.is_active:
-        formatted_message = f"{client_ip} {current_user.firstName} {current_user.lastName} {timestamp} - {message}\n"
-    else:
-        formatted_message = f"{client_ip} {timestamp} - {message}\n"
-    
-    # Write the log message to a file
-    with open('logs/app.log', 'a') as log_file:
-        log_file.write(formatted_message)
-
-    # Print the log message to the console
-    print(formatted_message)
 
 
 # HOME -   /home/
@@ -1008,10 +985,9 @@ def add_student():
         session = GetSession(sessionID=session_id)
 
         if not session:
-            log_message("/add_student Error loading session")
-            flask.flash("Error loading session") 
-            return flask.redirect(flask.url_for('home'))
-        
+            database_error("add_student", "Session")
+            return flask.redirect('home')
+    
         session = session[0]
         unitID = session.unitID
         
