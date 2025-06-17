@@ -96,6 +96,7 @@ function checkSessionExists() {
                 errorSpan.innerHTML = "Please select a valid option for all fields."
                 errorSpan.classList.remove("invisible");
             }
+
         },
         error: function(error) {
             console.error("Error configuring/updating session", error);

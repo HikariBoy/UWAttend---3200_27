@@ -29,7 +29,11 @@ def home():
     if current_session :
         current_session = current_session[0]
     else :
-        return redirect(url_for('session')) 
+        return redirect(url_for('session'))
+    
+    if not userHasAccessToSession(current_session) :
+        access_error('home', 'Session')
+        return redirect(url_for('session'))
 
     log_message("/home - Session : " + current_session.sessionName)
 
@@ -95,7 +99,7 @@ def session():
     # if session already exists, redirect to /updatesession
     session_id = flask.session.get('session_id')
     existing_session = GetSession(session_id)
-    if existing_session:
+    if existing_session and userHasAccessToSession(existing_session[0]):
         return redirect(url_for('updatesession'))
 
     form = SessionForm()
@@ -118,6 +122,11 @@ def session():
 
             log_message("/session Submitting form : " + "[" + str(session_name) + "] [" + str(session_time) + "] [" + str(unit_id) + "] [" + str(session_date) + "]" )
             
+            if not userHasFacilitatorAccessToUnitByID(unit_id) :
+                access_error('session', 'Unit')
+                return redirect(url_for('session'))
+            
+            # Check session names and times are valid - if not redirect to session with error msg
 
             # Check if the session already exists
             current_session = GetUniqueSession(unit_id, session_name, session_time, session_date)
