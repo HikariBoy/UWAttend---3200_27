@@ -1248,6 +1248,10 @@ def student_suggestions():
         return flask.jsonify([])
     
     current_session = current_session[0]
+
+    if not userHasAccessToSession(current_session) :
+        access_error('student_suggestions','Session')
+        return flask.jsonify([])
     
     unit = GetUnit(unitID=current_session.unitID)
 
@@ -1325,6 +1329,10 @@ def sign_all_out():
     
     session = session[0]
 
+    if not userHasAccessToSession(session) :
+        access_error('sign_all_out', 'Session')
+        return redirect(url_for('home'))
+
     attendance_records = GetAttendance(input_sessionID=session_id)
 
     current_time = get_perth_time().time() # did this so that they all have an identical sign out time
@@ -1340,15 +1348,26 @@ def sign_all_out():
     return flask.redirect(flask.url_for('home'))
 
 @app.route('/download_facilitator_template')
+@login_required
 def download_facilitator_template():
     log_message("/download_facilitator_template")
+
+    if current_user.userType == 'facilitator' :
+        access_error('download_facilitator_template', 'template csv')
+        return redirect(url_for('home'))
+    
     # Serve the facilitator template from the static folder or any desired directory
     return flask.send_from_directory('static/files', 'facilitator_template.csv', as_attachment=True)
 
 @app.route('/download_student_template')
+@login_required
 def download_student_template():
     log_message("/download_student_template")
-    print("Sending student template")
+
+    if current_user.userType == 'facilitator' :
+        access_error('download_student_template', 'template csv')
+        return redirect(url_for('home'))
+
     # Serve the student template from the static folder or any desired directory
     return flask.send_from_directory('static/files', 'student_template.csv', as_attachment=True)
 
