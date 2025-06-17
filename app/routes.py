@@ -352,8 +352,9 @@ def updateunit():
         flask.flash("Error - please try again", "error")
         return flask.redirect(flask.url_for('unitconfig'))
     unit = unit_data[0]
-    if unit not in current_user.unitsCoordinate: #!!! TEST THIS WORKS AS INTENDED (cant access not your own units)
-        flask.flash("Error - please try again", "error") #Saying that the ID exists is a vulnerability, so we just say it doesnt
+
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('updateunit', 'Unit')
         return flask.redirect(flask.url_for('unitconfig'))
     
     #Hardcoding unit session times conversion:
@@ -444,6 +445,10 @@ def editStudents():
         return redirect(url_for('unitconfig'))
     else :
         unit = unit[0]
+
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('editStudents', 'Unit')
+        return redirect(url_for('unitconfig'))
     
     form = AddStudentForm()
     csv_form = UploadStudentForm()
@@ -476,6 +481,10 @@ def editStudents():
 def uploadStudents():
     csv_form = UploadStudentForm()
     unit_id = flask.request.args.get('id')
+
+    if not userHasCoordinatorAccessToUnitByID(unit_id) :
+        access_error('uploadStudents', 'Unit')
+        return redirect(url_for('unitconfig'))
 
     if csv_form.validate_on_submit():
         student_file = csv_form.studentfile.data
@@ -512,8 +521,8 @@ def deleteStudent():
     else :
         unit = unit[0]
 
-    if unit not in current_user.unitsCoordinate: #!check this works
-        flask.flash("Error - please try again","error")
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('deleteStudent', 'Unit')
         return flask.redirect(url_for('unitconfig'))
 
     student_id = flask.request.args.get('student_id')
@@ -535,6 +544,10 @@ def editFacilitators():
         return redirect(url_for('unitconfig'))
     else :
         unit = unit[0]
+
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('editFacilitators', 'Unit')
+        return redirect(url_for('unitconfig'))
 
     facilitators = unit.facilitators
     facilitator_list = []
@@ -560,9 +573,9 @@ def deleteFacilitator():
     else :
         unit = unit[0]
 
-    if unit not in current_user.unitsCoordinate:
-        flask.flash("Error - please try again","error")
-        return flask.redirect(url_for('unitconfig'))
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('deleteFacilitator', 'Unit')
+        return redirect(url_for('unitconfig'))
     
     facilitator_email = flask.request.args.get('facilitator_id')
     if deleteFacilitatorConnection(unit_id, facilitator_email):
@@ -584,9 +597,9 @@ def resend_email_to_facilitator() :
     else :
         unit = unit[0]
 
-    if unit not in current_user.unitsCoordinate:
-        flask.flash("Error - please try again","error")
-        return flask.redirect(url_for('unitconfig'))
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('deleteFacilitator', 'Unit')
+        return redirect(url_for('unitconfig'))
     
     facilitator_email = flask.request.args.get('facilitator_id')
     facilitator = GetUser(email=facilitator_email)
