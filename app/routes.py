@@ -494,7 +494,7 @@ def deleteStudent():
         unit = unit[0]
 
     if unit not in current_user.unitsCoordinate: #!check this works
-        flask.flash("Unit not found","error")
+        flask.flash("Error - please try again","error")
         return flask.redirect(url_for('unitconfig'))
 
     student_id = flask.request.args.get('student_id')
@@ -542,7 +542,7 @@ def deleteFacilitator():
         unit = unit[0]
 
     if unit not in current_user.unitsCoordinate:
-        flask.flash("Error loading Unit","error")
+        flask.flash("Error - please try again","error")
         return flask.redirect(url_for('unitconfig'))
     
     facilitator_email = flask.request.args.get('facilitator_id')
@@ -566,7 +566,7 @@ def resend_email_to_facilitator() :
         unit = unit[0]
 
     if unit not in current_user.unitsCoordinate:
-        flask.flash("Error loading Unit","error")
+        flask.flash("Error - please try again","error")
         return flask.redirect(url_for('unitconfig'))
     
     facilitator_email = flask.request.args.get('facilitator_id')
@@ -1113,14 +1113,11 @@ def add_facilitator():
             if user is None :
                 if AddUser(email, "placeholder", "placeholder", generate_temp_password(), "facilitator") :
                     if send_email_ses("noreply@uwaengineeringprojects.com", email, 'welcome') :
-                        print("User added - confirmation email sent!")
                         flask.flash("User added", 'success')
                     else :
-                        print("User was added but error sending welcome email - please resend email")
                         flask.flash("User was added but error sending welcome email - please resend email", 'error')
                 else : 
                     flask.flash("Failed to add user", 'error')
-                    print("Failed to add user")
                     return redirect(url_for('updateunit'))
                 
                 user = GetUser(email=email)
