@@ -37,7 +37,7 @@ function checkStudentInOtherSession() {
                 // anything here??
             }
             else if (data['result'] === "session_not_found") {
-                // if the session ID (in the cookie) was not valid
+                // if the session ID (in the cookie) was not valid or if the user didn't have access to that session
                 // add a flash message??
             }
         },

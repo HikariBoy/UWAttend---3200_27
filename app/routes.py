@@ -242,6 +242,9 @@ def checksessionexists():
         session_time = form.session_time.data
         session_date = form.session_date.data
 
+        if not userHasFacilitatorAccessToUnitByID(unit_id) :
+            return flask.jsonify({'result': "validateError"})
+
         # Check if the session already exists
         new_session = GetUniqueSession(unit_id, session_name, session_time, session_date)
 
@@ -258,8 +261,6 @@ def checksessionexists():
     else :
         return flask.jsonify({'result': "validateError"})
     
-
-
 @app.route('/checkstudentinothersession', methods=['POST'])
 @login_required
 def checkstudentinothersession():
@@ -275,10 +276,12 @@ def checkstudentinothersession():
         session = GetSession(sessionID=session_id)
 
         if not session:
-            database_error('checkstudentinothersession', 'Session')
             return flask.jsonify({'result': "session_not_found"})
     
         session = session[0]
+
+        if not userHasAccessToSession(session) :
+            return flask.jsonify({'result': "session_not_found"})
 
         # check if student has existing attendance (in this class) i.e this is not a sign-in, but a sign-out
         existing_attendance = GetAttendance(input_sessionID=session_id, studentID=studentID)
