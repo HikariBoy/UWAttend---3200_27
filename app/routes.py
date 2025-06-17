@@ -162,6 +162,11 @@ def updatesession():
     existing_session = GetSession(current_session_id)
     if not existing_session:
         return redirect(url_for('session'))
+    
+    if not userHasAccessToSession(existing_session[0]) :
+        access_error('updatesession', 'Session')
+        removeSessionCookie()
+        return redirect(url_for('session'))
 
     form = SessionForm()
 
@@ -172,10 +177,12 @@ def updatesession():
 
     if form.validate_on_submit():
         # Handle form submission
-        unit_id = form.unit.data
         session_name = form.session_name.data
         session_time = form.session_time.data
         session_date = form.session_date.data
+
+        # ignore the submitted unit_id - just use the current session's unit ID meaning the unit ID can't be changed
+        unit_id = existing_session[0].unitID
 
         log_message("/updatesession Submitting form : " + "[" + str(session_name) + "] [" + str(session_time) + "] [" + str(unit_id) + "] [" + str(session_date) + "]" )
 

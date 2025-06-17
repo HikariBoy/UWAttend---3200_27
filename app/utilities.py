@@ -553,7 +553,7 @@ def userHasCoordinatorAccessToUnit(unit) :
 def userHasCoordinatorAccessToUnitByID(unit_id) :
     
     for u in current_user.unitsCoordinate :
-        if u.unitID == unit_id :
+        if u.unitID == int(unit_id) :
             return True
         
     return False
@@ -561,9 +561,9 @@ def userHasCoordinatorAccessToUnitByID(unit_id) :
 def userHasFacilitatorAccessToUnitByID(unit_id) :
     
     for u in current_user.unitsFacilitate :
-        if u.unitID == unit_id :
+        if u.unitID == int(unit_id) :
             return True
-        
+
     return False
 
 
