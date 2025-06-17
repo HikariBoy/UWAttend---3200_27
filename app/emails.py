@@ -42,6 +42,7 @@ def send_email_ses(sender, recipient, type):
     token = generate_token()
     token = StoreToken(email=recipient, token=token)
 
+    # token will be None if there is no user with that email
     if token is None:
         return False
     
