@@ -45,6 +45,9 @@ def database_error(route, db_table) :
     log_message('/' + route + " Error loading " + db_table)
     flask.flash("Error - please try again", 'error')
 
+def access_error(route, db_table) :
+    log_message('/' + route + " User can't access " + db_table)
+    flask.flash("Error - please try again", 'error')
 
 def checkStudentInOtherSessions(studentID, session) :
 
@@ -528,4 +531,48 @@ def get_unit_id_by_code(unit_code):
         return unit.unitID
     return None
 
+# Function to check user access
+def userHasFacilitatorAccessToUnit(unit=None) :
 
+    if unit is None :
+        return False
+
+    if unit in current_user.unitsFacilitate :
+        return True
+    return False
+
+def userHasCoordinatorAccessToUnit(unit) :
+
+    if unit is None :
+        return False
+    
+    if unit in current_user.unitsCoordinate :
+        return True
+    return False
+
+def userHasCoordinatorAccessToUnitByID(unit_id) :
+    
+    for u in current_user.unitsCoordinate :
+        if u.unitID == unit_id :
+            return True
+        
+    return False
+
+def userHasFacilitatorAccessToUnitByID(unit_id) :
+    
+    for u in current_user.unitsFacilitate :
+        if u.unitID == unit_id :
+            return True
+        
+    return False
+
+
+def userHasAccessToSession(session) :
+
+    if session is None :
+        return False
+
+    for u in current_user.unitsFacilitate :
+        if u.unitID == session.unitID :
+            return True
+    return False
