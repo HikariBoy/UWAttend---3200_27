@@ -745,7 +745,10 @@ def export_data():
     zip_filename = 'database.zip'
 
     unit_code = flask.request.args.get('unitCode') or flask.request.form.get('unitCode')
-   
+
+    if (current_user.userType == 'facilitator') :
+        access_error('export', 'Export')
+        return redirect(url_for('home'))
 
     # Get database.zip filepath
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -815,6 +818,10 @@ def student():
     else :
         current_session = current_session[0]
 
+    if not userHasAccessToSession(current_session) :
+        access_error('student', 'Session')
+        return flask.redirect(flask.url_for('home'))
+
     unit = GetUnit(unitID=current_session.unitID)
 
     if not unit:
@@ -864,6 +871,10 @@ def remove_from_session():
         return flask.redirect(flask.url_for('home'))
     else :
         current_session = current_session[0]
+
+    if not userHasAccessToSession(current_session) :
+        access_error('remove_from_session', 'Session')
+        return redirect(flask.url_for('home'))
 
     status = RemoveStudentFromSession(student_id, current_session.sessionID)
 
@@ -1016,6 +1027,10 @@ def edit_student_details():
     
     current_session = current_session[0]
 
+    if not userHasAccessToSession(current_session) :
+        access_error('edit_student_details', 'Session')
+        return flask.redirect(flask.url_for('home'))
+
     if form.validate_on_submit():
 
         # Build the dictionary with only non-empty/None values
@@ -1069,6 +1084,11 @@ def add_student():
             return flask.redirect('home')
     
         session = session[0]
+
+        if not userHasAccessToSession(session) :
+            access_error("add_student", "Session")
+            return flask.redirect('home')
+
         unitID = session.unitID
         
         student = GetStudent(studentID=studentID, unitID=unitID)
@@ -1139,6 +1159,10 @@ def add_facilitator():
     
     unit = unit[0]
 
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('add_facilitator', 'Unit')
+        return redirect(url_for('unitconfig'))
+
     if valid_email(email):
         if unit in current_user.unitsCoordinate:
             user = GetUser(email=email)
@@ -1182,6 +1206,10 @@ def get_session_details(unitID):
         return flask.jsonify({'session_name_choices': [], 'session_time_choices': [], 'session_time_default': ""})
     
     unit = unit[0]
+
+    if not userHasFacilitatorAccessToUnit(unit) :
+        access_error('get_session_details', 'Unit')
+        return flask.jsonify({'session_name_choices': [], 'session_time_choices': [], 'session_time_default': ""})
 
     # get session names for unit
     session_names = unit.sessionNames.split('|')
