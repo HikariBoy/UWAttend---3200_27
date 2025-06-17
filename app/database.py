@@ -296,6 +296,12 @@ def GetStudent(unitID = None, studentID = None, studentNumber = None):
     
     return attendance_records
 
+def GetStudentByUnitAndNumber(unitID, studentNumber) :
+    query = db.session.query(Student).filter(Student.unitID == unitID, Student.studentNumber == studentNumber)
+
+    return query.first()
+
+
 def GetStudentList(student_ids):
 
     query = db.session.query(Student)

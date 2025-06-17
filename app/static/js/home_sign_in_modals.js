@@ -36,6 +36,10 @@ function checkStudentInOtherSession() {
                 
                 // anything here??
             }
+            else if (data['result'] === "session_not_found") {
+                // if the session ID (in the cookie) was not valid
+                // add a flash message??
+            }
         },
         error: function(error) {
             console.error("Error signing student in", error);

@@ -260,7 +260,7 @@ def checkstudentinothersession():
 
         if not session:
             database_error('checkstudentinothersession', 'Session')
-            return flask.jsonify({'result': "Error loading Session"})
+            return flask.jsonify({'result': "session_not_found"})
     
         session = session[0]
 
@@ -330,11 +330,11 @@ def updateunit():
     unit_id = flask.request.args.get('id')
     unit_data = GetUnit(unitID=unit_id)
     if not unit_data:
-        flask.flash("Unit not found", "error")
+        flask.flash("Error - please try again", "error")
         return flask.redirect(flask.url_for('unitconfig'))
     unit = unit_data[0]
     if unit not in current_user.unitsCoordinate: #!!! TEST THIS WORKS AS INTENDED (cant access not your own units)
-        flask.flash("Unit not found", "error") #Saying that the ID exists is a vulnerability, so we just say it doesnt
+        flask.flash("Error - please try again", "error") #Saying that the ID exists is a vulnerability, so we just say it doesnt
         return flask.redirect(flask.url_for('unitconfig'))
     
     #Hardcoding unit session times conversion:
@@ -432,8 +432,8 @@ def editStudents():
     if form.submit.data and form.validate_on_submit() and flask.request.method == 'POST':
         consent = "not required" if unit.consent == False else "no"
         #Ensure you cant add duplicate students
-        if GetStudent(unitID=unit_id, studentNumber=form.studentNumber.data)[0] is None:
-            flask.flash("Student already assigned to this unit", "error")
+        if GetStudentByUnitAndNumber(unit_id, form.studentNumber.data) is not None:
+            flask.flash("Student number already assigned to this unit", "error")
             return flask.redirect(url_for('editStudents', id=unit_id))
         AddStudent(form.studentNumber.data, form.firstName.data, form.lastName.data, form.title.data, form.preferredName.data, unit_id, consent)
         flask.flash("Student added successfully", "success")
