@@ -270,7 +270,7 @@ def checkstudentinothersession():
         if existing_attendance :
             return flask.jsonify({'result': "sign_out"})
 
-        otherCurrentSessions = checkStudentInOtherSessions(studentID, session_id)
+        otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
 
         # if the student ID appears, and they haven't been signed out...
         if len(otherCurrentSessions) > 0 :
@@ -1056,7 +1056,7 @@ def add_student():
                     status = RemoveSignOutTime(attendanceID=existing_attendance[0].attendanceID)
                 return flask.redirect(flask.url_for('home'))
             
-            otherCurrentSessions = checkStudentInOtherSessions(studentID, session_id)
+            otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
 
             if otherCurrentSessions is not None :
                 # sign them out of the other sesssion that they are in
@@ -1103,7 +1103,7 @@ def add_facilitator():
 
     if not unit :
         database_error('add_facilitator', 'Unit')
-        return redirect(url_for('updateunit'))
+        return redirect(url_for('unitconfig'))
     
     unit = unit[0]
 
@@ -1111,13 +1111,24 @@ def add_facilitator():
         if unit in current_user.unitsCoordinate:
             user = GetUser(email=email)
             if user is None :
-                AddUser(email, "placeholder", "placeholder", generate_temp_password(), "facilitator")
-                send_email_ses("noreply@uwaengineeringprojects.com", email, 'welcome')
+                if AddUser(email, "placeholder", "placeholder", generate_temp_password(), "facilitator") :
+                    if send_email_ses("noreply@uwaengineeringprojects.com", email, 'welcome') :
+                        print("User added - confirmation email sent!")
+                        flask.flash("User added", 'success')
+                    else :
+                        print("User was added but error sending welcome email - please resend email")
+                        flask.flash("User was added but error sending welcome email - please resend email", 'error')
+                else : 
+                    flask.flash("Failed to add user", 'error')
+                    print("Failed to add user")
+                    return redirect(url_for('updateunit'))
+                
                 user = GetUser(email=email)
             if unit not in user.unitsFacilitate :
                 AddUnitToFacilitator(email, unit_id)
+                flask.flash("User added", 'success')
 
-    facilitators = GetUnit(unitID=unit_id)[0].facilitators
+    facilitators = unit.facilitators
     facilitator_list = []
 
     for facilitator in facilitators:
@@ -1136,16 +1147,22 @@ def get_session_details(unitID):
 
     # get unit by unitID
     unit = GetUnit(unitID=unitID)
+
+    if not unit :
+        database_error('get_session_details', 'Unit')
+        return flask.jsonify({'session_name_choices': [], 'session_time_choices': [], 'session_time_default': ""})
     
+    unit = unit[0]
+
     # get session names for unit
-    session_names = unit[0].sessionNames.split('|')
+    session_names = unit.sessionNames.split('|')
     session_name_choices = []
 
     for name in session_names :
         session_name_choices.append(name)
 
     # get session times for unit
-    session_times = unit[0].sessionTimes.split('|')
+    session_times = unit.sessionTimes.split('|')
     session_time_choices = []
 
     session_time_default = get_time_suggestion(session_times) 
@@ -1155,7 +1172,6 @@ def get_session_details(unitID):
 
     for time in session_times :
         session_time_choices.append(time)
-
 
     # send session details
     return flask.jsonify({'session_name_choices': session_name_choices, 'session_time_choices': session_time_choices, 'session_time_default': session_time_default})
@@ -1167,12 +1183,23 @@ def student_suggestions():
     # get the search query from the request
     query = flask.request.args.get('q', '').strip().lower()
 
-    # TODO will need to be replaced with actual session logic later 
     session_id = flask.session.get('session_id')
-    current_session = GetSession(sessionID=session_id)[0] 
-    unit = GetUnit(unitID=current_session.unitID)[0]
-    
+    current_session = GetSession(sessionID=session_id)
 
+    if not current_session :
+        database_error('student_suggestions','Session')
+        return flask.jsonify([])
+    
+    current_session = current_session[0]
+    
+    unit = GetUnit(unitID=current_session.unitID)
+
+    if not unit :
+        database_error('student_suggestions', 'Unit')
+        return flask.jsonify([])
+    
+    unit = unit[0]
+    
     # get students in the unit associated with the session
     students = GetStudent(unitID=current_session.unitID)
 
@@ -1236,13 +1263,12 @@ def sign_all_out():
 
     session = GetSession(sessionID=session_id)
     if not session:
-        log_message("/sign_all_out Invalid session key")
-        flask.flash('Failed to sign out all users - invalid session key')
+        database_error('sign_all_out', 'Session')
+        return redirect(url_for('home'))
+    
+    session = session[0]
 
     attendance_records = GetAttendance(input_sessionID=session_id)
-    if not attendance_records:
-        log_message("/sign_all_out no users signed in")
-        flask.flash('Failed to sign out all users - no users signed in')
 
     current_time = get_perth_time().time() # did this so that they all have an identical sign out time
     
@@ -1252,8 +1278,8 @@ def sign_all_out():
 
     db.session.commit()
         
-
     log_message("/sign_all_out Successful")
+    flask.flash('All users signed out', 'success')
     return flask.redirect(flask.url_for('home'))
 
 @app.route('/download_facilitator_template')

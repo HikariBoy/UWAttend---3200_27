@@ -46,12 +46,7 @@ def database_error(route, db_table) :
     flask.flash("Error loading " + db_table, 'error')
 
 
-def checkStudentInOtherSessions(studentID, sessionID) :
-
-    session = GetSession(sessionID)
-
-    if session is not None and len(session) != 0:
-        session = session[0]
+def checkStudentInOtherSessions(studentID, session) :
 
     currentSessions = GetCurrentSessions(session.unitID, session.sessionTime, session.sessionDate)
 
@@ -63,8 +58,7 @@ def checkStudentInOtherSessions(studentID, sessionID) :
             for a in attendance_records :
                 if str(a.studentID) == studentID and a.signOutTime is None :
                     otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : s.sessionName})
-
-    
+                    
     return otherCurrentSessions
 
 # Set of functions used to read and populate students into the database from a csv file.
