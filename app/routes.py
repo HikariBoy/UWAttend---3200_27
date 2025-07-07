@@ -123,12 +123,12 @@ def session():
             log_message("/session Submitting form : " + "[" + str(session_name) + "] [" + str(session_time) + "] [" + str(unit_id) + "] [" + str(session_date) + "]" )
 
             unit = GetUnit(unit_id)
-            if unit :
-                unit = unit[0]
-            else :
+            if not unit :
                 database_error('session', 'Unit')
                 return redirect(url_for('session'))
 
+            unit = unit[0]
+            
             # Check unit id is current unit and user has access - if not redirect to session with error msg
             if not userHasFacilitatorAccessToUnit(unit) or not check_unit_is_current(unit) :
                 access_error('session', 'Unit')
@@ -195,11 +195,11 @@ def updatesession():
         unit_id = existing_session[0].unitID
 
         unit = GetUnit(unit_id)
-        if unit :
-            unit = unit[0]
-        else :
+        if not unit :
             database_error('session', 'Unit')
             return redirect(url_for('updatesession'))
+            
+        unit = unit[0]
 
         # Check unit id is current unit - if not redirect to session with error msg and remove session cookie
         if not check_unit_is_current(unit) :
@@ -270,12 +270,11 @@ def checksessionexists():
         session_date = form.session_date.data
 
         unit = GetUnit(unit_id)
-        if unit :
-            unit = unit[0]
-        else :
+        if not unit :
             database_error('session', 'Unit')
             return flask.jsonify({'result': "validateError"})
-
+        unit = unit[0]
+            
         # Check unit id is current unit and user has access - if not redirect to session with error msg
         if not userHasFacilitatorAccessToUnit(unit) or not check_unit_is_current(unit) :
             return flask.jsonify({'result': "validateError"})
