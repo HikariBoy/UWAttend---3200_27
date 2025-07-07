@@ -269,7 +269,19 @@ def checksessionexists():
         session_time = form.session_time.data
         session_date = form.session_date.data
 
-        if not userHasFacilitatorAccessToUnitByID(unit_id) :
+        unit = GetUnit(unit_id)
+        if unit :
+            unit = unit[0]
+        else :
+            database_error('session', 'Unit')
+            return flask.jsonify({'result': "validateError"})
+
+        # Check unit id is current unit and user has access - if not redirect to session with error msg
+        if not userHasFacilitatorAccessToUnit(unit) or not check_unit_is_current(unit) :
+            return flask.jsonify({'result': "validateError"})
+            
+        # Check session details are valid
+        if not sessionDetailsAreValid(unit, session_name, session_time) :
             return flask.jsonify({'result': "validateError"})
 
         # Check if the session already exists
