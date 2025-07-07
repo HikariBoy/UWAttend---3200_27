@@ -23,7 +23,7 @@
 
 <div class="container-fluid">
     <div class="mt-2 mx-md-5 mx-2 d-flex flex-column align-items-center">
-        <h2 class="mb-3">Add a User</h2>
+        <h2 class="mb-3">Users</h2>
         <form method="POST" enctype="multipart/form-data" novalidate class="container-fluid">
             {{ form.hidden_tag() }}
 
@@ -35,6 +35,11 @@
             <div class="d-flex justify-content-center align-items-center mb-4 form-select-parent">
                 <div class="form-select-parent">
                     {{ form.UserType(class="form-select") }}
+                    {% for error in form.UserType.errors if form.UserType.errors %}
+                    <span class="form-text text-danger">{{ error }}</span>
+                    {% else %}
+                    <span class="form-text invisible">No error</span>
+                    {% endfor %}
                 </div>
             </div>
 
@@ -45,13 +50,13 @@
                 <div class="col-md-8 ">
                     {{ field(class="form-control") }}
                 </div>
+                {% for error in field.errors %}
+                    <div class="row">
+                        <div class="col-3 col-md-2"></div>
+                        <span class="text-danger col"> {{error}} </span>
+                    </div>
+                {% endfor %}
             </div>
-            {% for error in field.errors %}
-            <div class="row">
-                <div class="col-3 col-md-2"></div>
-                <span class="text-danger col"> {{error}} </span>
-            </div>
-            {% endfor %}
             {% endif %}
             {% endfor %}
             <div class="d-flex justify-content-center">

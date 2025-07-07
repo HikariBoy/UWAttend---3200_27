@@ -33,10 +33,10 @@ def validate_sessionoccurence(form, field):
 
 
 def validate_UserType(form, field):
-    if not field.data:
-        print("reached here")
+    if not form.UserType.data :
         raise ValidationError("Select valid user type")
-        
+    elif not (form.UserType.data == 'coordinator' or form.UserType.data == 'admin') :
+        raise ValidationError("Select valid user type")
 
 def unit_check(form, field):
     print(f"checking unit validity, {form.unitcode.data}, {form.startdate.data}")
@@ -67,7 +67,7 @@ def is_student_num(form, field):
 class AddUserForm(FlaskForm):
     UserType = SelectField(
     'User Type',
-    choices=[('admin', 'Administrator'), ('coordinator', 'Coordinator')],
+    choices=[('admin', 'Administrator'), ('coordinator', 'Coordinator'), ('facilitator', 'Facilitator')],
     validators=[validate_UserType]
     )
     email       = StringField('Email:', validators=[DataRequired()])
