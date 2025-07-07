@@ -576,3 +576,10 @@ def userHasAccessToSession(session) :
         if u.unitID == session.unitID :
             return True
     return False
+
+def sessionDetailsAreValid(unit, sessionName, sessionTime) :
+    if unit is None :
+        return False
+    
+    if sessionName in unit.sessionNames.split('|') and sessionTime in unit.sessionTimes.split('|') :
+        return True

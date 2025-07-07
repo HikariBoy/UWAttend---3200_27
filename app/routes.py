@@ -121,12 +121,22 @@ def session():
             session_date = form.session_date.data
 
             log_message("/session Submitting form : " + "[" + str(session_name) + "] [" + str(session_time) + "] [" + str(unit_id) + "] [" + str(session_date) + "]" )
-            
-            if not userHasFacilitatorAccessToUnitByID(unit_id) :
+
+            unit = GetUnit(unit_id)
+            if unit :
+                unit = unit[0]
+            else :
+                database_error('session', 'Unit')
+                return redirect(url_for('session'))
+
+            # Check unit id is current unit and user has access - if not redirect to session with error msg
+            if not userHasFacilitatorAccessToUnit(unit) or not check_unit_is_current(unit) :
                 access_error('session', 'Unit')
                 return redirect(url_for('session'))
             
-            # Check session names and times are valid - if not redirect to session with error msg
+            # Check session details are valid
+            if not sessionDetailsAreValid(unit, session_name, session_time) :
+                return redirect(url_for('session'))
 
             # Check if the session already exists
             current_session = GetUniqueSession(unit_id, session_name, session_time, session_date)
