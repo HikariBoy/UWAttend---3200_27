@@ -29,7 +29,11 @@ def home():
     if current_session :
         current_session = current_session[0]
     else :
-        return redirect(url_for('session')) 
+        return redirect(url_for('session'))
+    
+    if not userHasAccessToSession(current_session) :
+        access_error('home', 'Session')
+        return redirect(url_for('session'))
 
     log_message("/home - Session : " + current_session.sessionName)
 
@@ -95,7 +99,7 @@ def session():
     # if session already exists, redirect to /updatesession
     session_id = flask.session.get('session_id')
     existing_session = GetSession(session_id)
-    if existing_session:
+    if existing_session and userHasAccessToSession(existing_session[0]):
         return redirect(url_for('updatesession'))
 
     form = SessionForm()
@@ -117,7 +121,22 @@ def session():
             session_date = form.session_date.data
 
             log_message("/session Submitting form : " + "[" + str(session_name) + "] [" + str(session_time) + "] [" + str(unit_id) + "] [" + str(session_date) + "]" )
+
+            unit = GetUnit(unit_id)
+            if not unit :
+                database_error('session', 'Unit')
+                return redirect(url_for('session'))
+
+            unit = unit[0]
             
+            # Check unit id is current unit and user has access - if not redirect to session with error msg
+            if not userHasFacilitatorAccessToUnit(unit) or not check_unit_is_current(unit) :
+                access_error('session', 'Unit')
+                return redirect(url_for('session'))
+            
+            # Check session details are valid
+            if not sessionDetailsAreValid(unit, session_name, session_time) :
+                return redirect(url_for('session'))
 
             # Check if the session already exists
             current_session = GetUniqueSession(unit_id, session_name, session_time, session_date)
@@ -153,6 +172,11 @@ def updatesession():
     existing_session = GetSession(current_session_id)
     if not existing_session:
         return redirect(url_for('session'))
+    
+    if not userHasAccessToSession(existing_session[0]) :
+        access_error('updatesession', 'Session')
+        removeSessionCookie()
+        return redirect(url_for('session'))
 
     form = SessionForm()
 
@@ -163,10 +187,29 @@ def updatesession():
 
     if form.validate_on_submit():
         # Handle form submission
-        unit_id = form.unit.data
         session_name = form.session_name.data
         session_time = form.session_time.data
         session_date = form.session_date.data
+
+        # ignore the submitted unit_id - just use the current session's unit ID meaning the unit ID can't be changed
+        unit_id = existing_session[0].unitID
+
+        unit = GetUnit(unit_id)
+        if not unit :
+            database_error('session', 'Unit')
+            return redirect(url_for('updatesession'))
+            
+        unit = unit[0]
+
+        # Check unit id is current unit - if not redirect to session with error msg and remove session cookie
+        if not check_unit_is_current(unit) :
+            removeSessionCookie()
+            access_error('session', 'Unit')
+            return redirect(url_for('session'))
+            
+        # Check session details are valid
+        if not sessionDetailsAreValid(unit, session_name, session_time) :
+            return redirect(url_for('session'))
 
         log_message("/updatesession Submitting form : " + "[" + str(session_name) + "] [" + str(session_time) + "] [" + str(unit_id) + "] [" + str(session_date) + "]" )
 
@@ -226,6 +269,20 @@ def checksessionexists():
         session_time = form.session_time.data
         session_date = form.session_date.data
 
+        unit = GetUnit(unit_id)
+        if not unit :
+            database_error('session', 'Unit')
+            return flask.jsonify({'result': "validateError"})
+        unit = unit[0]
+            
+        # Check unit id is current unit and user has access - if not redirect to session with error msg
+        if not userHasFacilitatorAccessToUnit(unit) or not check_unit_is_current(unit) :
+            return flask.jsonify({'result': "validateError"})
+            
+        # Check session details are valid
+        if not sessionDetailsAreValid(unit, session_name, session_time) :
+            return flask.jsonify({'result': "validateError"})
+
         # Check if the session already exists
         new_session = GetUniqueSession(unit_id, session_name, session_time, session_date)
 
@@ -242,8 +299,6 @@ def checksessionexists():
     else :
         return flask.jsonify({'result': "validateError"})
     
-
-
 @app.route('/checkstudentinothersession', methods=['POST'])
 @login_required
 def checkstudentinothersession():
@@ -259,10 +314,12 @@ def checkstudentinothersession():
         session = GetSession(sessionID=session_id)
 
         if not session:
-            database_error('checkstudentinothersession', 'Session')
             return flask.jsonify({'result': "session_not_found"})
     
         session = session[0]
+
+        if not userHasAccessToSession(session) :
+            return flask.jsonify({'result': "session_not_found"})
 
         # check if student has existing attendance (in this class) i.e this is not a sign-in, but a sign-out
         existing_attendance = GetAttendance(input_sessionID=session_id, studentID=studentID)
@@ -333,8 +390,9 @@ def updateunit():
         flask.flash("Error - please try again", "error")
         return flask.redirect(flask.url_for('unitconfig'))
     unit = unit_data[0]
-    if unit not in current_user.unitsCoordinate: #!!! TEST THIS WORKS AS INTENDED (cant access not your own units)
-        flask.flash("Error - please try again", "error") #Saying that the ID exists is a vulnerability, so we just say it doesnt
+
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('updateunit', 'Unit')
         return flask.redirect(flask.url_for('unitconfig'))
     
     #Hardcoding unit session times conversion:
@@ -425,6 +483,10 @@ def editStudents():
         return redirect(url_for('unitconfig'))
     else :
         unit = unit[0]
+
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('editStudents', 'Unit')
+        return redirect(url_for('unitconfig'))
     
     form = AddStudentForm()
     csv_form = UploadStudentForm()
@@ -457,6 +519,10 @@ def editStudents():
 def uploadStudents():
     csv_form = UploadStudentForm()
     unit_id = flask.request.args.get('id')
+
+    if not userHasCoordinatorAccessToUnitByID(unit_id) :
+        access_error('uploadStudents', 'Unit')
+        return redirect(url_for('unitconfig'))
 
     if csv_form.validate_on_submit():
         student_file = csv_form.studentfile.data
@@ -493,8 +559,8 @@ def deleteStudent():
     else :
         unit = unit[0]
 
-    if unit not in current_user.unitsCoordinate: #!check this works
-        flask.flash("Error - please try again","error")
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('deleteStudent', 'Unit')
         return flask.redirect(url_for('unitconfig'))
 
     student_id = flask.request.args.get('student_id')
@@ -516,6 +582,10 @@ def editFacilitators():
         return redirect(url_for('unitconfig'))
     else :
         unit = unit[0]
+
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('editFacilitators', 'Unit')
+        return redirect(url_for('unitconfig'))
 
     facilitators = unit.facilitators
     facilitator_list = []
@@ -541,9 +611,9 @@ def deleteFacilitator():
     else :
         unit = unit[0]
 
-    if unit not in current_user.unitsCoordinate:
-        flask.flash("Error - please try again","error")
-        return flask.redirect(url_for('unitconfig'))
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('deleteFacilitator', 'Unit')
+        return redirect(url_for('unitconfig'))
     
     facilitator_email = flask.request.args.get('facilitator_id')
     if deleteFacilitatorConnection(unit_id, facilitator_email):
@@ -565,9 +635,9 @@ def resend_email_to_facilitator() :
     else :
         unit = unit[0]
 
-    if unit not in current_user.unitsCoordinate:
-        flask.flash("Error - please try again","error")
-        return flask.redirect(url_for('unitconfig'))
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('deleteFacilitator', 'Unit')
+        return redirect(url_for('unitconfig'))
     
     facilitator_email = flask.request.args.get('facilitator_id')
     facilitator = GetUser(email=facilitator_email)
@@ -713,7 +783,10 @@ def export_data():
     zip_filename = 'database.zip'
 
     unit_code = flask.request.args.get('unitCode') or flask.request.form.get('unitCode')
-   
+
+    if (current_user.userType == 'facilitator') :
+        access_error('export', 'Export')
+        return redirect(url_for('home'))
 
     # Get database.zip filepath
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -783,6 +856,10 @@ def student():
     else :
         current_session = current_session[0]
 
+    if not userHasAccessToSession(current_session) :
+        access_error('student', 'Session')
+        return flask.redirect(flask.url_for('home'))
+
     unit = GetUnit(unitID=current_session.unitID)
 
     if not unit:
@@ -832,6 +909,10 @@ def remove_from_session():
         return flask.redirect(flask.url_for('home'))
     else :
         current_session = current_session[0]
+
+    if not userHasAccessToSession(current_session) :
+        access_error('remove_from_session', 'Session')
+        return redirect(flask.url_for('home'))
 
     status = RemoveStudentFromSession(student_id, current_session.sessionID)
 
@@ -984,6 +1065,10 @@ def edit_student_details():
     
     current_session = current_session[0]
 
+    if not userHasAccessToSession(current_session) :
+        access_error('edit_student_details', 'Session')
+        return flask.redirect(flask.url_for('home'))
+
     if form.validate_on_submit():
 
         # Build the dictionary with only non-empty/None values
@@ -1037,6 +1122,11 @@ def add_student():
             return flask.redirect('home')
     
         session = session[0]
+
+        if not userHasAccessToSession(session) :
+            access_error("add_student", "Session")
+            return flask.redirect('home')
+
         unitID = session.unitID
         
         student = GetStudent(studentID=studentID, unitID=unitID)
@@ -1107,6 +1197,10 @@ def add_facilitator():
     
     unit = unit[0]
 
+    if not userHasCoordinatorAccessToUnit(unit) :
+        access_error('add_facilitator', 'Unit')
+        return redirect(url_for('unitconfig'))
+
     if valid_email(email):
         if unit in current_user.unitsCoordinate:
             user = GetUser(email=email)
@@ -1151,6 +1245,10 @@ def get_session_details(unitID):
     
     unit = unit[0]
 
+    if not userHasFacilitatorAccessToUnit(unit) :
+        access_error('get_session_details', 'Unit')
+        return flask.jsonify({'session_name_choices': [], 'session_time_choices': [], 'session_time_default': ""})
+
     # get session names for unit
     session_names = unit.sessionNames.split('|')
     session_name_choices = []
@@ -1188,6 +1286,10 @@ def student_suggestions():
         return flask.jsonify([])
     
     current_session = current_session[0]
+
+    if not userHasAccessToSession(current_session) :
+        access_error('student_suggestions','Session')
+        return flask.jsonify([])
     
     unit = GetUnit(unitID=current_session.unitID)
 
@@ -1265,6 +1367,10 @@ def sign_all_out():
     
     session = session[0]
 
+    if not userHasAccessToSession(session) :
+        access_error('sign_all_out', 'Session')
+        return redirect(url_for('home'))
+
     attendance_records = GetAttendance(input_sessionID=session_id)
 
     current_time = get_perth_time().time() # did this so that they all have an identical sign out time
@@ -1280,15 +1386,26 @@ def sign_all_out():
     return flask.redirect(flask.url_for('home'))
 
 @app.route('/download_facilitator_template')
+@login_required
 def download_facilitator_template():
     log_message("/download_facilitator_template")
+
+    if current_user.userType == 'facilitator' :
+        access_error('download_facilitator_template', 'template csv')
+        return redirect(url_for('home'))
+    
     # Serve the facilitator template from the static folder or any desired directory
     return flask.send_from_directory('static/files', 'facilitator_template.csv', as_attachment=True)
 
 @app.route('/download_student_template')
+@login_required
 def download_student_template():
     log_message("/download_student_template")
-    print("Sending student template")
+
+    if current_user.userType == 'facilitator' :
+        access_error('download_student_template', 'template csv')
+        return redirect(url_for('home'))
+
     # Serve the student template from the static folder or any desired directory
     return flask.send_from_directory('static/files', 'student_template.csv', as_attachment=True)
 
