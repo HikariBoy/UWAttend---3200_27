@@ -194,6 +194,23 @@ def updatesession():
         # ignore the submitted unit_id - just use the current session's unit ID meaning the unit ID can't be changed
         unit_id = existing_session[0].unitID
 
+        unit = GetUnit(unit_id)
+        if unit :
+            unit = unit[0]
+        else :
+            database_error('session', 'Unit')
+            return redirect(url_for('updatesession'))
+
+        # Check unit id is current unit - if not redirect to session with error msg and remove session cookie
+        if not check_unit_is_current(unit) :
+            removeSessionCookie()
+            access_error('session', 'Unit')
+            return redirect(url_for('session'))
+            
+        # Check session details are valid
+        if not sessionDetailsAreValid(unit, session_name, session_time) :
+            return redirect(url_for('session'))
+
         log_message("/updatesession Submitting form : " + "[" + str(session_name) + "] [" + str(session_time) + "] [" + str(unit_id) + "] [" + str(session_date) + "]" )
 
         # Check if the session already exists
