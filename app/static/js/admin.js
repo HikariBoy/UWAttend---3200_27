@@ -11,7 +11,7 @@ function userTypeChanged(e) {
 }
 
 function disableOrEnableAddUserBtn(selectedUserType) {
-    let btnElement = document.getElementById("submit");
+    let btnElement = document.getElementById("addUserSubmitBtn");
     
     if (selectedUserType == "facilitator") {
         btnElement.setAttribute("disabled", "");

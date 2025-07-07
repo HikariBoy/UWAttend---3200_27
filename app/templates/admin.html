@@ -60,40 +60,40 @@
             {% endif %}
             {% endfor %}
             <div class="d-flex justify-content-center">
-                {{ form.submit(class="btn btn-primary col-md-4 col-6") }}
+                {{ form.submit(class="btn btn-primary col-md-4 col-6", id="addUserSubmitBtn") }}
             </div>
-        </form>
-    </div>
-
-    <div class="d-flex justify-content-center">
-        <div class="mx-4 mt-3 mx-md-5 container">
-            {% if users|length > 0 %}
-            <div class="row d-none d-md-flex text-center lead table-heading">
-                <span class="col">Email</span>
-                <span class="col">Name</span>
-                <span class="col">User Type</span>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-center">
-        <div class="mx-4 mt-0 mx-md-5 container">
-            {% if users|length > 0 %}
-            {% for user in users %}
-            <div class="row table-element-nocursor text-center my-2 py-2">
-                <span class="col-md d-none d-md-inline">{{ user.email }}</span>
-                <span class="col-md col-6">{{ user.firstName }} {{ user.lastName }}</span>
-                <span class="col-md col-6">{{ user.userType }}</span>
-            </div>
-            {% else %}
-            <h2 class="text-center"> No users</h2>
-            {% endfor %}
-            {% endif %}
-        </div>
+        </form><br>
+        
+		<!-- Table -->
+		<div class="col-md-8 col-12">
+			<h4 class="text-center">List of{% if type == "admin" %} Admins {% elif type == "coordinator" %} Coordinators {% else %} Facilitators {% endif %}</h4>
+			<p class="text-center">If the user's name is placeholder placeholder, they likely haven't set up there account yet. Click resend to resend the welcome email.</p>
+			<div class="container">
+				{% for user in users %}
+				<div class="row outline-table text-center py-1 d-flex align-items-center">
+					<span class="col-4">{{ user.email }}</span>
+					<span class="col-4">{{ user.firstName }} {{ user.lastName }}</span>
+					<span class="col-2">
+						<form
+							action=""
+							method="POST">
+							<button class="py-1 btn btn-secondary" type="submit">Resend Email</button>
+						</form>
+					</span>
+					<span class="col-2">
+						<form
+							action=""
+							method="POST">
+							<button class="py-1 btn btn-light changeTypeBtn" type="submit">Change Type</button>
+						</form>
+					</span>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 {% endblock %}

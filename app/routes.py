@@ -128,7 +128,7 @@ def session():
                 return redirect(url_for('session'))
 
             unit = unit[0]
-            
+
             # Check unit id is current unit and user has access - if not redirect to session with error msg
             if not userHasFacilitatorAccessToUnit(unit) or not check_unit_is_current(unit) :
                 access_error('session', 'Unit')
@@ -681,7 +681,9 @@ def admin():
 
         return flask.redirect(url_for('admin'))
     
-    return flask.render_template('admin.html', form=form)
+    users = GetAllUsers()
+    
+    return flask.render_template('admin.html', form=form, type="admin", users=users)
 
 # ADDUNIT - /addunit/ /unit/
 @app.route('/addunit', methods=['GET', 'POST'])
