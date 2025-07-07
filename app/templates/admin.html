@@ -24,49 +24,46 @@
 <div class="container-fluid">
     <div class="mt-2 mx-md-5 mx-2 d-flex flex-column align-items-center">
         <h2 class="mb-3">Users</h2>
+        <p class="text-center">Select the user type below to see information and functionality for that user type.</p>
         <form method="POST" enctype="multipart/form-data" novalidate class="container-fluid">
             {{ form.hidden_tag() }}
 
-            {% if error %}
-            <div class="alert alert-danger">
-                {{error}}
-            </div>
-            {% endif %}
             <div class="d-flex justify-content-center align-items-center mb-4 form-select-parent">
                 <div class="form-select-parent">
                     {{ form.UserType(class="form-select") }}
                     {% for error in form.UserType.errors if form.UserType.errors %}
-                    <span class="form-text text-danger">{{ error }}</span>
-                    {% else %}
-                    <span class="form-text invisible">No error</span>
+                    <span class="form-text text-danger addUserFormError">{{ error }}</span>
                     {% endfor %}
                 </div>
             </div>
-
-            {% for field in form %}
-            {% if field.type == "StringField"%}
-            <div class="mb-2 mb-md-4 row d-flex align-items-center">
-                {{ field.label(class="form-label col-md-2 text-md-end") }}
-                <div class="col-md-8 ">
-                    {{ field(class="form-control") }}
-                </div>
-                {% for error in field.errors %}
-                    <div class="row">
-                        <div class="col-3 col-md-2"></div>
-                        <span class="text-danger col"> {{error}} </span>
+            <div id="emailAndSubmitContainer">
+                <h4 class="mb-3 text-center">Add <span class="userTypeValue">Admin</span></h4>
+                <p class="text-center">This creates a new user with user type <span class="userTypeValue">Admin</span>. If you want to make an existing user a <span class="userTypeValue">Admin</span>, change their user type instead.</p>
+                {% for field in form %}
+                {% if field.type == "StringField"%}
+                <div class="mb-2 mb-md-4 row d-flex align-items-center">
+                    {{ field.label(class="form-label col-md-2 text-md-end") }}
+                    <div class="col-md-8 ">
+                        {{ field(class="form-control") }}
                     </div>
+                    {% for error in field.errors %}
+                        <div class="row addUserFormError">
+                            <div class="col-3 col-md-2"></div>
+                            <span class="text-danger col"> {{error}} </span>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 {% endfor %}
-            </div>
-            {% endif %}
-            {% endfor %}
-            <div class="d-flex justify-content-center">
-                {{ form.submit(class="btn btn-primary col-md-4 col-6", id="addUserSubmitBtn") }}
+                <div class="d-flex justify-content-center">
+                    {{ form.submit(class="btn btn-primary col-md-4 col-6", id="addUserSubmitBtn") }}
+                </div>
             </div>
         </form><br>
         
 		<!-- Table -->
 		<div class="col-md-8 col-12">
-			<h4 class="text-center">List of{% if type == "admin" %} Admins {% elif type == "coordinator" %} Coordinators {% else %} Facilitators {% endif %}</h4>
+			<h4 class="text-center">List of <span class="userTypeValue">Admin</span>s</h4>
 			<p class="text-center">If the user's name is placeholder placeholder, they likely haven't set up their account yet. Click resend to resend the welcome email.</p>
 			<div class="container">
 				{% for user in users %}
@@ -94,6 +91,6 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 
 {% endblock %}
