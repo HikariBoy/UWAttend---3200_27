@@ -677,7 +677,11 @@ def resend_email_to_user() :
 @app.route('/changeUserType', methods=['POST'])
 @login_required
 def changeUserType() :
-    flask.flash("change type success", "error")
+
+    if current_user.userType != 'admin':
+        return flask.redirect('home')
+    
+    flask.flash("change type success", "success")
     return flask.redirect(url_for('admin'))
 
 
