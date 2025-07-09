@@ -681,7 +681,22 @@ def changeUserType() :
     if current_user.userType != 'admin':
         return flask.redirect('home')
     
-    flask.flash("change type success", "success")
+    userEmail = flask.request.form['userEmail']
+    userNewType = flask.request.form['newTypeSelect']
+
+    if userNewType not in ["admin", "coordinator", "facilitator"] :
+        flask.flash("Error changing type", "error")
+        return flask.redirect(url_for('admin'))
+
+    user = GetUser(email=userEmail)
+
+    if user is not None :
+        # change type
+        flask.flash("change type success", "success")
+    else :
+        flask.flash("Error changing type", "error")
+        return flask.redirect(url_for('admin'))
+
     return flask.redirect(url_for('admin'))
 
 

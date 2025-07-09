@@ -30,7 +30,7 @@
                 <div class="form-select-parent">
                     {{ form.UserType(class="form-select") }}
                     {% for error in form.UserType.errors if form.UserType.errors %}
-                    <span class="form-text text-danger addUserFormError">{{ error }}</span>
+                    <span class="form-text text-danger">{{ error }}</span>
                     {% endfor %}
                 </div>
             </div>
@@ -46,7 +46,7 @@
                         {{ field(class="form-control") }}
                     </div>
                     {% for error in field.errors %}
-                        <div class="row addUserFormError">
+                        <div class="row">
                             <div class="col-3 col-md-2"></div>
                             <span class="text-danger col"> {{error}} </span>
                         </div>
