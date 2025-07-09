@@ -674,6 +674,11 @@ def resend_email_to_user() :
     
     return flask.redirect(url_for('admin', selectedType=selectedType))
 
+@app.route('/changeUserType', methods=['POST'])
+@login_required
+def changeUserType() :
+    flask.flash("change type success", "error")
+    return flask.redirect(url_for('admin'))
 
 
 # add users

@@ -7,14 +7,20 @@
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<div id="changeTypeModalText" class="modal-body text-center">
-				Changing type
 				<p id="changeTypeModalChangesText"></p>
-				<br>
-				By confirming, you will make these changes.
-			</div>
-			<div class="modal-footer border-0 pt-0 d-flex justify-content-center">
-				<button type="button" class="btn btn-danger w-30 py-2" onclick="changeType()">Confirm Changes</button>
-			</div>
+                <form action="/changeUserType" method="POST">
+                    <label for="newTypeSelect">New user type:</label>
+                    <select class="form-select" id="changeTypeModalSelect" name="newTypeSelect">
+                        <option value="admin">Admin</option>
+                        <option value="coordinator">Coordinator</option>
+                        <option value="facilitator">Facilitator</option>
+                    </select>
+                    By confirming, you will make these changes.
+                </div>
+                <div class="modal-footer border-0 pt-0 d-flex justify-content-center">
+                    <button type="submit" class="btn btn-danger w-30 py-2">Confirm Changes</button>
+                </div>
+                </form>
 		</div>
 	</div>
 </div>
