@@ -343,6 +343,14 @@ def GetUser(userID = None, email = None, userType = None):
     
     return attendance_records
 
+
+def GetUsersByType(userType) :
+
+    query = db.session.query(User).filter(User.userType == userType)
+    users = query.all()
+    return users
+
+
 # Used for exporting to csv. Required because can't change GetUser() to return query.all() instead of query.first()
 def GetAllUsers():
     query = db.session.query(User)

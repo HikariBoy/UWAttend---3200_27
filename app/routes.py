@@ -685,9 +685,8 @@ def admin():
             else : flask.flash("Failed to add user", 'error')
 
         return flask.redirect(url_for('admin'))
-    
-    # get all users of type selectedUserType
-    users = GetAllUsers()
+
+    users = GetUsersByType(selectedType)
 
     # if new form to render (no errors) --> adjust form such that the selected user type is selectedUserType
     
