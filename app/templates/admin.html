@@ -72,14 +72,14 @@
 					<span class="col-4">{{ user.firstName }} {{ user.lastName }}</span>
 					<span class="col-2">
 						<form
-							action=""
+							action="{{ url_for('resend_email_to_user') + '?email=' + user.email }}"
 							method="POST">
 							<button class="py-1 btn btn-secondary" type="submit">Resend Email</button>
 						</form>
 					</span>
 					<span class="col-2">
 						<form
-							action=""
+							action="{{ url_for('resend_email_to_user') + '?email='+user.email }}"
 							method="POST">
 							<button class="py-1 btn btn-light changeTypeBtn" type="submit">Change Type</button>
 						</form>

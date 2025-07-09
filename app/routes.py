@@ -652,6 +652,30 @@ def resend_email_to_facilitator() :
     
     return flask.redirect(url_for('editFacilitators', id=unit_id))
 
+
+@app.route('/resend_email_to_user', methods=['POST'])
+@login_required
+def resend_email_to_user() :
+
+    if current_user.userType != 'admin':
+        return flask.redirect('home')
+    
+    email = flask.request.args.get('email')
+    user = GetUser(email=email)
+    selectedType = 'admin'
+
+    if user is not None :
+        selectedType = user.userType
+        if send_email_ses("noreply@uwaengineeringprojects.com", email, 'welcome') :
+            flask.flash("Welcome email successfully sent","success")
+        else : flask.flash("Error sending email", "error")
+    else :
+        database_error('resend_email_to_user', 'User')
+    
+    return flask.redirect(url_for('admin', selectedType=selectedType))
+
+
+
 # add users
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
