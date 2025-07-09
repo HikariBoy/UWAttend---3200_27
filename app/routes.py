@@ -662,6 +662,11 @@ def admin():
     if current_user.userType != 'admin':
         return flask.redirect('home')
 
+    selectedType = "admin"
+
+    if 'selectedType' in flask.request.args:
+        selectedType = flask.request.args.get('selectedType')
+
     form = AddUserForm()
 
     if form.validate_on_submit() and flask.request.method == 'POST': 
@@ -681,9 +686,12 @@ def admin():
 
         return flask.redirect(url_for('admin'))
     
+    # get all users of type selectedUserType
     users = GetAllUsers()
+
+    # if new form to render (no errors) --> adjust form such that the selected user type is selectedUserType
     
-    return flask.render_template('admin.html', form=form, type="admin", users=users)
+    return flask.render_template('admin.html', form=form, selectedType=selectedType, users=users)
 
 # ADDUNIT - /addunit/ /unit/
 @app.route('/addunit', methods=['GET', 'POST'])
