@@ -32,7 +32,21 @@ function updateChangeTypeModal(userEmail, userType) {
         document.getElementById('changeTypeModalFacilitatorOption').setAttribute('selected', '');
     }
 
+    document.getElementById('changeTypeModalSelect').addEventListener('change', showWarning);
+}
 
+function showWarning(e) {
+
+    newType = e.target.value;
+    oldType = document.getElementById('changeTypeModalCurrentUserType').innerHTML;
+    warningDivElement = document.getElementById('changeTypeModalWarningDiv');
+
+    if (newType == 'facilitator' && (oldType == 'Administrator' || oldType == 'Coordinator')) {
+        warningDivElement.style.display = "block";
+    }
+    else {
+        warningDivElement.style.display = "none";
+    }
 
 }
 
