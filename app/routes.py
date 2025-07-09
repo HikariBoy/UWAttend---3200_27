@@ -684,9 +684,10 @@ def admin():
 
             else : flask.flash("Failed to add user", 'error')
 
-        return flask.redirect(url_for('admin'))
+        return flask.redirect(url_for('admin', selectedType=selectedType))
 
     users = GetUsersByType(selectedType)
+    users.reverse()
 
     form.UserType.default = selectedType
     form.process()
