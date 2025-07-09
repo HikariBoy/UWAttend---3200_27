@@ -691,13 +691,16 @@ def changeUserType() :
     user = GetUser(email=userEmail)
 
     if user is not None :
-        # change type
-        flask.flash("change type success", "success")
+        user.userType = userNewType
+        if userNewType == 'facilitator' :
+            user.unitsCoordinate = []
+        db.session.commit()
+        flask.flash("Type successfully changed", "success")
     else :
         flask.flash("Error changing type", "error")
         return flask.redirect(url_for('admin'))
 
-    return flask.redirect(url_for('admin'))
+    return flask.redirect(url_for('admin', selectedType=userNewType))
 
 
 # add users

@@ -343,7 +343,6 @@ def GetUser(userID = None, email = None, userType = None):
     
     return attendance_records
 
-
 def GetUsersByType(userType) :
 
     query = db.session.query(User).filter(User.userType == userType)
