@@ -78,11 +78,7 @@
 						</form>
 					</span>
 					<span class="col-2">
-						<form
-							action="{{ url_for('resend_email_to_user') + '?email='+user.email }}"
-							method="POST">
-							<button class="py-1 btn btn-light changeTypeBtn" type="submit">Change Type</button>
-						</form>
+						<button class="py-1 btn btn-light changeTypeBtn" data-email="{{ user.email }}" data-user-type="{{ user.userType }}">Change Type</button>
 					</span>
 				</div>
 				{% endfor %}
@@ -91,6 +87,6 @@
     </div>
 </div>
 
-<!--  -->
+{% include 'changeType.html'%}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}
