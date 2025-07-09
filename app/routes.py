@@ -688,8 +688,9 @@ def admin():
 
     users = GetUsersByType(selectedType)
 
-    # if new form to render (no errors) --> adjust form such that the selected user type is selectedUserType
-    
+    form.UserType.default = selectedType
+    form.process()
+
     return flask.render_template('admin.html', form=form, selectedType=selectedType, users=users)
 
 # ADDUNIT - /addunit/ /unit/
