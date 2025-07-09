@@ -1,8 +1,17 @@
 // register functions for when usertype selector is changed
 window.onload = function() {
-    document.getElementById('UserType').addEventListener("change", userTypeChanged);
-    hideOrShowEmailAndSubmitContainer(document.getElementById('UserType').value);
-    changeHeadings(document.getElementById('UserType').value);
+
+    document.getElementById('UserType').addEventListener("change", selectedTypeChanged);
+
+    //document.getElementById('UserType').addEventListener("change", userTypeChanged);
+    //hideOrShowEmailAndSubmitContainer(document.getElementById('UserType').value);
+    //changeHeadings(document.getElementById('UserType').value);
+}
+
+function selectedTypeChanged(e) {
+
+    selectedUserType = e.target.value;
+    window.location.href = '/admin?selectedType=' + selectedUserType;
 }
 
 function userTypeChanged(e) {
