@@ -1,6 +1,6 @@
 // register getSessionDetails function to fire when unit is selected
 window.onload = function() {
-    document.getElementById('unit').addEventListener("change", getSessionDetails)
+    document.getElementById('unit').addEventListener("change", getSessionDetails);
 }
 
 // get the session names and session times for the unit

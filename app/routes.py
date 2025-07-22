@@ -128,7 +128,7 @@ def session():
                 return redirect(url_for('session'))
 
             unit = unit[0]
-            
+
             # Check unit id is current unit and user has access - if not redirect to session with error msg
             if not userHasFacilitatorAccessToUnit(unit) or not check_unit_is_current(unit) :
                 access_error('session', 'Unit')
@@ -652,6 +652,57 @@ def resend_email_to_facilitator() :
     
     return flask.redirect(url_for('editFacilitators', id=unit_id))
 
+
+@app.route('/resend_email_to_user', methods=['POST'])
+@login_required
+def resend_email_to_user() :
+
+    if current_user.userType != 'admin':
+        return flask.redirect('home')
+    
+    email = flask.request.args.get('email')
+    user = GetUser(email=email)
+    selectedType = 'admin'
+
+    if user is not None :
+        selectedType = user.userType
+        if send_email_ses("noreply@uwaengineeringprojects.com", email, 'welcome') :
+            flask.flash("Welcome email successfully sent","success")
+        else : flask.flash("Error sending email", "error")
+    else :
+        database_error('resend_email_to_user', 'User')
+    
+    return flask.redirect(url_for('admin', selectedType=selectedType))
+
+@app.route('/changeUserType', methods=['POST'])
+@login_required
+def changeUserType() :
+
+    if current_user.userType != 'admin':
+        return flask.redirect('home')
+    
+    userEmail = flask.request.form['userEmail']
+    userNewType = flask.request.form['newTypeSelect']
+
+    if userNewType not in ["admin", "coordinator", "facilitator"] :
+        flask.flash("Error changing type", "error")
+        return flask.redirect(url_for('admin'))
+
+    user = GetUser(email=userEmail)
+
+    if user is not None :
+        user.userType = userNewType
+        if userNewType == 'facilitator' :
+            user.unitsCoordinate = []
+        db.session.commit()
+        flask.flash("Type successfully changed", "success")
+    else :
+        flask.flash("Error changing type", "error")
+        return flask.redirect(url_for('admin'))
+
+    return flask.redirect(url_for('admin', selectedType=userNewType))
+
+
 # add users
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
@@ -661,6 +712,11 @@ def admin():
 
     if current_user.userType != 'admin':
         return flask.redirect('home')
+
+    selectedType = "admin"
+
+    if 'selectedType' in flask.request.args:
+        selectedType = flask.request.args.get('selectedType')
 
     form = AddUserForm()
 
@@ -679,9 +735,15 @@ def admin():
 
             else : flask.flash("Failed to add user", 'error')
 
-        return flask.redirect(url_for('admin'))
-    
-    return flask.render_template('admin.html', form=form)
+        return flask.redirect(url_for('admin', selectedType=selectedType))
+
+    users = GetUsersByType(selectedType)
+    users.reverse()
+
+    form.UserType.default = selectedType
+    form.process()
+
+    return flask.render_template('admin.html', form=form, selectedType=selectedType, users=users)
 
 # ADDUNIT - /addunit/ /unit/
 @app.route('/addunit', methods=['GET', 'POST'])

@@ -62,7 +62,7 @@
 			<h3 class="text-center">{% if type == "students" %} Student {% else %} Facilitator {% endif %} list for
 				unit: {{ unit.unitCode }}</h3>
 			{% if type == "facilitators" %}
-			<p class="text-center">If the facilitator's name is placeholder placeholder, they likely haven't set up there account yet. Click resend to resend the welcome email.
+			<p class="text-center">If the facilitator's name is placeholder placeholder, they likely haven't set up their account yet. Click resend to resend the welcome email.
 			</p>
 			{% endif %}
 			<div class="container">
@@ -82,7 +82,6 @@
 				{% endfor %}
 				{% else %}
 				{% for facilitator in facilitators %}
-				<!-- onlick re-route to student page for this specific student -->
 				<div class="row outline-table text-center py-1 d-flex align-items-center">
 					<span class="col-4">{{ facilitator.email }}</span>
 					<span class="col-4">{{ facilitator.name }}</span>

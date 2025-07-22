@@ -232,6 +232,10 @@ body {
   --bs-btn-active-border-color: color-mix(in srgb, var(--danger), black 25%);
 }
 
+.changeTypeBtn {
+  border: solid 1px black;
+}
+
 /* Badges */
 
 .badge {
