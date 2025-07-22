@@ -4,7 +4,7 @@ function resize_table() {
 	usedHeight += rect.top;
 	console.log(usedHeight)
 	//Arbitrary small amount of pixels for wiggle room at bottom
-	remainingHeight = window.innerHeight - usedHeight - 10
+	remainingHeight = window.innerHeight / 2 - usedHeight - 10
 	$("#unitTable").height(remainingHeight + "px")
 }
 

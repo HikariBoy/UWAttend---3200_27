@@ -52,8 +52,7 @@ body {
 
 /* Table elements */
 
-#classTable,
-#unitTable {
+#classTable {
   overflow-y: auto;
   height: 0px;
 }
