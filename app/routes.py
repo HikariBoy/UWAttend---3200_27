@@ -375,7 +375,24 @@ def unitconfig():
 
     if current_user.userType == 'admin' :
         admin = True
+        all_units = GetUnit()
 
+        # Remove the user's own units
+        for unit in units_list :
+            if unit in all_units :
+                all_units.remove(unit)
+        
+        # Extract relevant data for each unit
+        for unit in all_units:
+            unit_info = {
+                "code": unit.unitCode,
+                "name": unit.unitName or "N/A",
+                "study_period": unit.studyPeriod,
+                "start_date": unit.startDate.strftime('%Y-%m-%d'),
+                "end_date": unit.endDate.strftime('%Y-%m-%d'),
+                "unit_id": str(unit.unitID)
+            }
+            other_units_data.append(unit_info)
 
     return flask.render_template('unit.html', units=units_data, admin=admin, otherUnits=other_units_data)
 
