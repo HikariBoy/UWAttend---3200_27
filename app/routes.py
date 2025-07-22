@@ -370,7 +370,14 @@ def unitconfig():
         }
         units_data.append(unit_info)
 
-    return flask.render_template('unit.html', units=units_data, admin=True)
+    admin = False
+    other_units_data = []
+
+    if current_user.userType == 'admin' :
+        admin = True
+
+
+    return flask.render_template('unit.html', units=units_data, admin=admin, otherUnits=other_units_data)
 
 #UPDATE UNIT FORM
 @app.route('/updateunit', methods=['GET', 'POST'])

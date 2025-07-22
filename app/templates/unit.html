@@ -71,9 +71,9 @@
                     </form>
                 </div>
             </div>
-            {% else %}
-            <h2 class="text-center">No current units</h2>
             {% endfor %}
+            {% else %}
+            <h5 class="text-center">No units</h5>
             {% endif %}
         </div>
     </div>
@@ -91,7 +91,7 @@
 
         <div class="d-flex justify-content-center">
         <div class="mx-4 mt-3 mx-md-5 container">
-            {% if units|length > 0 %}
+            {% if otherUnits|length > 0 %}
             <div class="row d-none d-md-flex text-center lead table-heading">
                 <span class="col">Unit Code</span>
                 <span class="col">Unit Name</span>
@@ -106,8 +106,8 @@
 
     <div class="d-flex justify-content-center">
         <div class="mx-4 mt-0 mx-md-5 container">
-            {% if units|length > 0 %}
-            {% for unit in units %}
+            {% if otherUnits|length > 0 %}
+            {% for unit in otherUnits %}
             <!-- Unit Row with Export Button for each unit -->
             <div class="row table-element text-center my-2 py-2"
                  onclick="location.href='{{ url_for('updateunit') }}?id={{ unit.unit_id }}'">
@@ -124,9 +124,9 @@
                     </form>
                 </div>
             </div>
-            {% else %}
-            <h2 class="text-center">No current units</h2>
             {% endfor %}
+            {% else %}
+            <h5 class="text-center">No units</h5>
             {% endif %}
         </div>
     </div>
