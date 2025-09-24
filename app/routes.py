@@ -1282,10 +1282,11 @@ def add_student():
     # Redirect back to home page when done
     return flask.redirect(flask.url_for('home'))
 
-@app.route('/add_facilitator', methods=['POST'])
-def add_facilitator():
+@app.route('/add_staff', methods=['POST'])
+def add_staff():
     email = flask.request.form['resetEmail']
     unit_id = flask.request.args.get('id')
+    userType = flask.request.args.get('userType')
 
     if not unit_id:
         return flask.redirect(flask.url_for('home'))
@@ -1293,14 +1294,17 @@ def add_facilitator():
     unit = GetUnit(unitID=unit_id)
 
     if not unit :
-        database_error('add_facilitator', 'Unit')
+        database_error('add_staff', 'Unit')
         return redirect(url_for('unitconfig'))
     
     unit = unit[0]
 
     if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin' :
-        access_error('add_facilitator', 'Unit')
+        access_error('add_staff', 'Unit')
         return redirect(url_for('unitconfig'))
+    
+    if not(userType == "facilitator" or userType == "coordinator") :
+        return redirect(url_for('updateUnit'))
 
     if valid_email(email):
         if unit in current_user.unitsCoordinate or current_user.userType == 'admin':
@@ -1316,19 +1320,30 @@ def add_facilitator():
                     return redirect(url_for('updateunit'))
                 
                 user = GetUser(email=email)
-            if unit not in user.unitsFacilitate :
-                AddUnitToFacilitator(email, unit_id)
 
-    facilitators = unit.facilitators
-    facilitator_list = []
+            if userType == 'facilitator' :
+                if unit not in user.unitsFacilitate :
+                    AddUnitToFacilitator(email, unit_id)
+            else :
+                if unit not in user.unitsCoordinate :
+                    AddUnitToCoordinator(email, unit_id)
 
-    for facilitator in facilitators:
+    staff = []
+
+    if userType == "facilitator" :
+        staff = unit.facilitators
+    else :
+        staff = unit.coordinators
+
+    staff_list = []
+
+    for person in staff:
         info = {
-            "name": f"{facilitator.firstName} {facilitator.lastName}",
-            "email": facilitator.email,
+            "name": f"{person.firstName} {person.lastName}",
+            "email": person.email,
         }
-        facilitator_list.append(info)
-    return flask.render_template('editPeople.html', unit_id=str(unit_id), unit=unit, type="facilitators", facilitators=facilitator_list)
+        staff_list.append(info)
+    return flask.render_template('editPeople.html', unit_id=str(unit_id), unit=unit, type=userType, staff_list=staff_list)
 
 @app.route('/get_session_details/<unitID>')
 @login_required
