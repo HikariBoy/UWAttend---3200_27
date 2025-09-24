@@ -603,13 +603,13 @@ def editStaff():
     unit = GetUnit(unitID=unit_id)
 
     if not unit :
-        database_error('editFacilitators', 'Unit')
+        database_error('editStaff', 'Unit')
         return redirect(url_for('unitconfig'))
     else :
         unit = unit[0]
 
     if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin' :
-        access_error('editFacilitators', 'Unit')
+        access_error('editStaff', 'Unit')
         return redirect(url_for('unitconfig'))
     
     if not(userType == "facilitator" or userType == "coordinator") :
@@ -617,7 +617,7 @@ def editStaff():
 
     staff_members = []
     staff_list = []
-    
+
     if userType == 'facilitator' :
         staff_members = unit.facilitators
     else :
@@ -632,29 +632,34 @@ def editStaff():
 
     return flask.render_template('editPeople.html', unit_id=str(unit_id), unit=unit, type=userType, staff_list=staff_list)
 
-@app.route('/deleteFacilitator', methods=['POST'])
+@app.route('/deleteStaff', methods=['POST'])
 @login_required
-def deleteFacilitator():
+def deleteStaff():
     unit_id = flask.request.args.get('unit_id')
+    userType = flask.request.args.get('userType')
     unit = GetUnit(unitID=unit_id)
 
     if not unit :
-        database_error('deleteFacilitator', 'Unit')
+        database_error('deleteStaff', 'Unit')
         return redirect(url_for('unitconfig'))
     else :
         unit = unit[0]
 
     if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin':
-        access_error('deleteFacilitator', 'Unit')
+        access_error('deleteStaff', 'Unit')
         return redirect(url_for('unitconfig'))
     
-    facilitator_email = flask.request.args.get('facilitator_id')
-    if deleteFacilitatorConnection(unit_id, facilitator_email):
-        flask.flash("Facilitator deleted successfully","success")
-        return flask.redirect(url_for('editFacilitators', id=unit_id))
+    if not(userType == "facilitator" or userType == "coordinator") :
+        return redirect(url_for('unitconfig'))
     
-    flask.flash("Error deleting facilitator", "error")
-    return flask.redirect(url_for('editFacilitators', id=unit_id))
+    staff_email = flask.request.args.get('staff_id')
+ 
+    if deleteStaffMemberConnection(unit_id, staff_email, userType):
+        flask.flash("Staff member deleted successfully","success")
+        return flask.redirect(url_for('editStaff', id=unit_id))
+    
+    flask.flash("Error deleting staff member", "error")
+    return flask.redirect(url_for('editStaff', id=unit_id))
 
 @app.route('/resend_email_to_facilitator', methods=['POST'])
 @login_required

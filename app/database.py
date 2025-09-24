@@ -599,13 +599,20 @@ def deleteStudentFromDB(unitID, studentID):
 
     return False
 
-def deleteFacilitatorConnection(unitID, facilitatorEmail):
-    user = db.session.query(User).filter_by(email=facilitatorEmail).first()
+def deleteStaffMemberConnection(unitID, staffEmail, staffType):
+    user = db.session.query(User).filter_by(email=staffEmail).first()
     unit = db.session.query(Unit).filter_by(unitID=unitID).first()
-    if unit in user.unitsFacilitate:
-        user.unitsFacilitate.remove(unit)
-        db.session.commit()
-        return True
+    if staffType == "facilitator" :
+        if unit in user.unitsFacilitate:
+            user.unitsFacilitate.remove(unit)
+            db.session.commit()
+            return True
+    
+    elif staffType == "coordinator" :
+        if unit in user.unitsCoordinate:
+            user.unitsCoordinate.remove(unit)
+            db.session.commit()
+            return True
     
     return False
     

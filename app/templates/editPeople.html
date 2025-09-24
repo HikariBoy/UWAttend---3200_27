@@ -94,7 +94,7 @@
 					</span>
 					<span class="col-2">
 						<form
-							action="{{ url_for('deleteFacilitator') + '?unit_id='+unit_id+'&facilitator_id='+person.email }}"
+							action="{{ url_for('deleteStaff') + '?unit_id='+unit_id+'&staff_id='+person.email+'&userType='+type }}"
 							method="POST">
 							<button class="py-1 btn btn-danger" type="submit">Delete</button>
 						</form>
