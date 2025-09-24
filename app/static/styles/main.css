@@ -52,8 +52,7 @@ body {
 
 /* Table elements */
 
-#classTable,
-#unitTable {
+#classTable {
   overflow-y: auto;
   height: 0px;
 }
@@ -230,6 +229,10 @@ body {
   --bs-btn-hover-border-color: color-mix(in srgb, var(--danger), black 20%);
   --bs-btn-active-bg: color-mix(in srgb, var(--danger), black 25%);
   --bs-btn-active-border-color: color-mix(in srgb, var(--danger), black 25%);
+}
+
+.changeTypeBtn {
+  border: solid 1px black;
 }
 
 /* Badges */

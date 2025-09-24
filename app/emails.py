@@ -42,6 +42,7 @@ def send_email_ses(sender, recipient, type):
     token = generate_token()
     token = StoreToken(email=recipient, token=token)
 
+    # token will be None if there is no user with that email
     if token is None:
         return False
     
@@ -52,6 +53,9 @@ def send_email_ses(sender, recipient, type):
         subject, body_text, body_html = get_forgot_password_email_details(recipient_encoded, token)
     else: 
         return False
+    
+    if (os.environ.get('USE_MOCK_EMAIL') == 'true') :
+        return True
     
     ses_client = boto3.client(
         'ses',
@@ -99,6 +103,9 @@ def send_email_ses(sender, recipient, type):
 
 def get_welcome_email_details(recipient_encoded, token):
     link = f"https://uwaengineeringprojects.com/create_account?email={recipient_encoded}&token={token}"
+
+    if (os.environ.get('USE_MOCK_EMAIL') == 'true') :
+        print(f"Link: http://127.0.0.1:5000/create_account?email={recipient_encoded}&token={token}")
 
     subject = "Welcome to UWAttend"  
     
@@ -180,6 +187,9 @@ def get_welcome_email_details(recipient_encoded, token):
 
 def get_forgot_password_email_details(recipient_encoded, token):
     link = f"https://uwaengineeringprojects.com/reset_password?email={recipient_encoded}&token={token}"
+
+    if (os.environ.get('USE_MOCK_EMAIL') == 'true') :
+        print(f"Link: http://127.0.0.1:5000/reset_password?email={recipient_encoded}&token={token}")
 
     subject = "Password Reset Request"
 

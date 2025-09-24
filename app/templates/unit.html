@@ -23,6 +23,9 @@
 <div class="container-fluid">
     <div class="mt-2 mx-md-5 mx-2">
         <h2>Unit Configuration</h2>
+        {% if admin %}
+        <h4>Your Units</h4>
+        {% endif %}
         <div class="d-flex justify-content-around mt-3">
             <!-- "Add Unit" Button -->
             <a href="{{ url_for('addunit') }}" class="btn btn-success col-4">Add Unit</a>
@@ -49,32 +52,90 @@
     </div>
 
     <div class="d-flex justify-content-center">
-        <div class="mx-4 mt-0 mx-md-5 container" id="unitTable">
+        <div class="mx-4 mt-0 mx-md-5 container">
             {% if units|length > 0 %}
             {% for unit in units %}
             <!-- Unit Row with Export Button for each unit -->
             <div class="row table-element text-center my-2 py-2"
-                 onclick="location.href='{{ url_for('updateunit') + '?id='+unit.unit_id }}'">
-                <span class="col-md col-6">{{ unit.code }}</span>
-                <span class="col-md col-6">{{ unit.name }}</span>
-                <span class="col-md d-none d-md-inline">{{ unit.study_period }}</span>
-                <span class="col-md d-none d-md-inline">{{ unit.start_date }}</span>
-                <span class="col-md d-none d-md-inline">{{ unit.end_date }}</span>
+                 onclick="location.href='{{ url_for('updateunit') }}?id={{ unit.unit_id }}'">
+                <div class="col-md col-6">{{ unit.code }}</div>
+                <div class="col-md col-6">{{ unit.name }}</div>
+                <div class="col-md d-none d-md-inline">{{ unit.study_period }}</div>
+                <div class="col-md d-none d-md-inline">{{ unit.start_date }}</div>
+                <div class="col-md d-none d-md-inline">{{ unit.end_date }}</div>
                 <!-- Export Button for each Unit -->
-                <span class="col-md col-12">
+                <div class="col-md col-12">
                     <form method="GET" action="{{ url_for('export_data') }}">
                         <input type="hidden" name="unitCode" value="{{ unit.code }}">
                         <button type="submit" class="btn btn-primary">Export</button>
                     </form>
-                </span>
+                </div>
             </div>
-            {% else %}
-            <h2 class="text-center">No current units</h2>
             {% endfor %}
+            {% else %}
+            <h5 class="text-center">No units</h5>
             {% endif %}
         </div>
     </div>
+    
+{% if admin %}
+    <div class="mt-2 mx-md-5 mx-2">
+        <h4>Other Units</h4>
+        <div class="d-flex justify-content-around mt-3">
+            <!-- "Export All" Button -->
+            <form method="GET" action="{{ url_for('export_data') }}" class="col-4">
+                <button type="submit" class="btn btn-primary w-100">Export All Units</button>
+            </form>
+        </div>
+    </div>
+
+        <div class="d-flex justify-content-center">
+        <div class="mx-4 mt-3 mx-md-5 container">
+            {% if otherUnits|length > 0 %}
+            <div class="row d-none d-md-flex text-center lead table-heading">
+                <span class="col">Unit Code</span>
+                <span class="col">Unit Name</span>
+                <span class="col">Study Period</span>
+                <span class="col">Start Date</span>
+                <span class="col">End Date</span>
+                <span class="col">Actions</span> <!-- New column for the Export button -->
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <div class="mx-4 mt-0 mx-md-5 container">
+            {% if otherUnits|length > 0 %}
+            {% for unit in otherUnits %}
+            <!-- Unit Row with Export Button for each unit -->
+            <div class="row table-element text-center my-2 py-2"
+                 onclick="location.href='{{ url_for('updateunit') }}?id={{ unit.unit_id }}'">
+                <div class="col-md col-6">{{ unit.code }}</div>
+                <div class="col-md col-6">{{ unit.name }}</div>
+                <div class="col-md d-none d-md-inline">{{ unit.study_period }}</div>
+                <div class="col-md d-none d-md-inline">{{ unit.start_date }}</div>
+                <div class="col-md d-none d-md-inline">{{ unit.end_date }}</div>
+                <!-- Export Button for each Unit -->
+                <div class="col-md col-12">
+                    <form method="GET" action="{{ url_for('export_data') }}">
+                        <input type="hidden" name="unitCode" value="{{ unit.code }}">
+                        <button type="submit" class="btn btn-primary">Export</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <h5 class="text-center">No units</h5>
+            {% endif %}
+        </div>
+    </div>
+
+{% endif %}
+
 </div>
 
-<script src="{{ url_for('static', filename='js/unit.js') }}"></script>
+
+<!--<script src="{{ url_for('static', filename='js/unit.js') }}"></script>-->
+
 {% endblock %}

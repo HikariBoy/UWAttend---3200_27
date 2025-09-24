@@ -1,0 +1,43 @@
+<div class="modal fade" id="changeTypeModal" tabindex="-1" aria-labelledby="changeTypeModalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header border-0 pb-0 d-flex justify-content-center ">
+				<h1 class="modal-title fs-4" id="changeTypeModalLabel">Change user type</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div id="changeTypeModalText" class="modal-body">
+                <form action="/changeUserType" method="POST">
+                    <input type="hidden" id="changeTypeModalEmailHiddenInput" name="userEmail">
+
+                    <div class="row">
+                        <div class="col-4 text-end">Email:</div>
+                        <div class="col" id="changeTypeModalEmail">olivia_hanly@icloud.com</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 text-end">Current type:</div>
+                        <div class="col" id="changeTypeModalCurrentUserType">Admin</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 text-end">New type:</div>
+                        <div class="col">
+                            <select class="form-select" id="changeTypeModalSelect" name="newTypeSelect">
+                                <option value="admin" id="changeTypeModalAdminOption">Administrator</option>
+                                <option value="coordinator" id="changeTypeModalCoordinatorOption">Coordinator</option>
+                                <option value="facilitator" id="changeTypeModalFacilitatorOption">Facilitator</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 d-flex justify-content-center">
+                    <div id="changeTypeModalWarningDiv" style="display:none">
+                        <p id="changeTypeModalWarningHeading">Warning:</p>
+                        <p>By downgrading this user's capabilities, they will be removed as a coordinator for any units, and will no longer be able to access them as a coordinator, but may still facilitate sessions for that unit.<br>As an admin, you will still be able to see and edit their units, and can add a new coordinator or re-add this user later.</p>
+                    </div>
+                    <p id="changeTypeModalTextWarning"></p>
+                    <button type="submit" class="btn btn-danger w-30 py-2">Confirm Changes</button>
+                </div>
+                </form>
+		</div>
+	</div>
+</div>

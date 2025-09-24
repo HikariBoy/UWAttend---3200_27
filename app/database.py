@@ -120,7 +120,9 @@ def AddUser(email, firstName, lastName, passwordHash, userType):
     
     except IntegrityError as e:
         db.session.rollback()
-        print(f'An error occurred: {e}')
+        return False
+    
+    return True
 
 def UpdateUser(email, firstName, lastName, passwordHash): # no userType as this should already be set 
 
@@ -237,11 +239,9 @@ def GetSession(sessionID = None, unitID = None, return_all = False):
     elif unitID is not None:
         query = query.filter(Session.unitID == unitID)
     elif not return_all:
-        return
-        # no parameters were supplied.
-        # print("You did not submit a parameter to use so returning all session records")
+        # no parameters were supplied, and return_all not true so returning an empty list
+        return []
 
-    
     attendance_records = query.all()
     
     return attendance_records
@@ -265,6 +265,15 @@ def GetSessionForExport(sessionID = None, unitID = None):
 
     return attendance_records
 
+def GetCurrentSessions(unitID, sessionTime, sessionDate) :
+
+    query = db.session.query(Session)
+    query = query.filter(Session.unitID == unitID, Session.sessionTime == sessionTime, Session.sessionDate == sessionDate)
+    records = query.all()
+    
+    return records
+
+
 def GetStudent(unitID = None, studentID = None, studentNumber = None):
 
     query = db.session.query(Student)
@@ -287,6 +296,12 @@ def GetStudent(unitID = None, studentID = None, studentNumber = None):
     
     return attendance_records
 
+def GetStudentByUnitAndNumber(unitID, studentNumber) :
+    query = db.session.query(Student).filter(Student.unitID == unitID, Student.studentNumber == studentNumber)
+
+    return query.first()
+
+
 def GetStudentList(student_ids):
 
     query = db.session.query(Student)
@@ -298,7 +313,6 @@ def GetStudentList(student_ids):
         # no parameters were supplied.
         print("You did not submit a parameter to use so returning all student records")
 
-    
     students = query.all()
     
     return students
@@ -328,6 +342,13 @@ def GetUser(userID = None, email = None, userType = None):
     attendance_records = query.first()
     
     return attendance_records
+
+def GetUsersByType(userType) :
+
+    query = db.session.query(User).filter(User.userType == userType)
+    users = query.all()
+    return users
+
 
 # Used for exporting to csv. Required because can't change GetUser() to return query.all() instead of query.first()
 def GetAllUsers():
@@ -578,13 +599,20 @@ def deleteStudentFromDB(unitID, studentID):
 
     return False
 
-def deleteFacilitatorConnection(unitID, facilitatorEmail):
-    user = db.session.query(User).filter_by(email=facilitatorEmail).first()
+def deleteStaffMemberConnection(unitID, staffEmail, staffType):
+    user = db.session.query(User).filter_by(email=staffEmail).first()
     unit = db.session.query(Unit).filter_by(unitID=unitID).first()
-    if unit in user.unitsFacilitate:
-        user.unitsFacilitate.remove(unit)
-        db.session.commit()
-        return True
+    if staffType == "facilitator" :
+        if unit in user.unitsFacilitate:
+            user.unitsFacilitate.remove(unit)
+            db.session.commit()
+            return True
+    
+    elif staffType == "coordinator" :
+        if unit in user.unitsCoordinate:
+            user.unitsCoordinate.remove(unit)
+            db.session.commit()
+            return True
     
     return False
     

@@ -12,6 +12,57 @@ from .models import *
 from .database import *
 from .emails import *
 import pandas as pd
+from flask_login import current_user
+from flask import redirect, url_for
+
+# Custom logging function
+def log_message(message):
+
+    client_ip = flask.request.remote_addr 
+    
+    # Ensure logs directory exists
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+    # Format the log message with a timestamp
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+   
+
+    if current_user.is_active:
+        formatted_message = f"{client_ip} {current_user.firstName} {current_user.lastName} {timestamp} - {message}\n"
+    else:
+        formatted_message = f"{client_ip} {timestamp} - {message}\n"
+    
+    # Write the log message to a file
+    with open('logs/app.log', 'a') as log_file:
+        log_file.write(formatted_message)
+
+    # Print the log message to the console
+    print(formatted_message)
+
+
+def database_error(route, db_table) :
+
+    log_message('/' + route + " Error loading " + db_table)
+    flask.flash("Error - please try again", 'error')
+
+def access_error(route, db_table) :
+    log_message('/' + route + " User can't access " + db_table)
+    flask.flash("Error - please try again", 'error')
+
+def checkStudentInOtherSessions(studentID, session) :
+
+    currentSessions = GetCurrentSessions(session.unitID, session.sessionTime, session.sessionDate)
+
+    otherCurrentSessions = []
+
+    for s in currentSessions :
+        if s.sessionName != session.sessionName :
+            attendance_records = GetAttendance(input_sessionID=s.sessionID)
+            for a in attendance_records :
+                if str(a.studentID) == studentID and a.signOutTime is None :
+                    otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : s.sessionName})
+                    
+    return otherCurrentSessions
 
 # Set of functions used to read and populate students into the database from a csv file.
 # Checklist for future
@@ -479,3 +530,56 @@ def get_unit_id_by_code(unit_code):
     if unit:
         return unit.unitID
     return None
+
+# Function to check user access
+def userHasFacilitatorAccessToUnit(unit=None) :
+
+    if unit is None :
+        return False
+
+    if unit in current_user.unitsFacilitate :
+        return True
+    return False
+
+def userHasCoordinatorAccessToUnit(unit) :
+
+    if unit is None :
+        return False
+    
+    if unit in current_user.unitsCoordinate :
+        return True
+    return False
+
+def userHasCoordinatorAccessToUnitByID(unit_id) :
+    
+    for u in current_user.unitsCoordinate :
+        if u.unitID == int(unit_id) :
+            return True
+        
+    return False
+
+def userHasFacilitatorAccessToUnitByID(unit_id) :
+    
+    for u in current_user.unitsFacilitate :
+        if u.unitID == int(unit_id) :
+            return True
+
+    return False
+
+
+def userHasAccessToSession(session) :
+
+    if session is None :
+        return False
+
+    for u in current_user.unitsFacilitate :
+        if u.unitID == session.unitID :
+            return True
+    return False
+
+def sessionDetailsAreValid(unit, sessionName, sessionTime) :
+    if unit is None :
+        return False
+    
+    if sessionName in unit.sessionNames.split('|') and sessionTime in unit.sessionTimes.split('|') :
+        return True

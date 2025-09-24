@@ -2,9 +2,58 @@
 $("#submit").click(function (e) {
 	e.preventDefault();  // Prevent the default form submission
 
-    checkSessionExists();
-
+    const form = document.getElementById("sessionForm");
+    let updateStatus = form.getAttribute("data-update");
+    console.log(updateStatus);
+    if (updateStatus === 'true') {
+        confirmSessionEdits();
+    }
+    else {
+        checkSessionExists();
+    }
 });
+
+function confirmSessionEdits() {
+    let modalTextElement = $("#confirmSessionEditsModalChangesText").get(0);
+
+    //retrieve current session details
+    const currentSessionName = $("#currentSessionName").get(0).innerHTML;
+    const currentSessionTime = $("#currentSessionTime").get(0).innerHTML;
+    const currentSessionDate = $("#currentSessionDate").get(0).innerHTML;
+
+    //retrieve new session details
+    const newSessionName = $("#session_name").get(0).value;
+    const newSessionTime = $("#session_time").get(0).value;
+    const newSessionDate = $("#session_date").get(0).value;
+
+    modalTextElement.innerHTML = "";
+    let changesMade = false;
+
+    if (currentSessionName != newSessionName) {
+        modalTextElement.innerHTML += "<br>" + currentSessionName + " > " + newSessionName;
+        changesMade = true;
+    }
+    if (currentSessionTime != newSessionTime) {
+        modalTextElement.innerHTML += "<br>" + currentSessionTime + " > " + newSessionTime;
+        changesMade = true;
+
+    }
+    if (currentSessionDate != newSessionDate) {
+        modalTextElement.innerHTML += "<br>" + currentSessionDate + " > " + newSessionDate;
+        changesMade = true;
+    }
+
+    if (changesMade) {
+        $('#confirmSessionEditsModal').modal('show');
+    }
+
+
+}
+
+function confirmChanges() {
+    $('#confirmSessionEditsModal').modal('hide');
+    checkSessionExists();
+}
 
 function checkSessionExists() {
 
@@ -47,6 +96,7 @@ function checkSessionExists() {
                 errorSpan.innerHTML = "Please select a valid option for all fields."
                 errorSpan.classList.remove("invisible");
             }
+
         },
         error: function(error) {
             console.error("Error configuring/updating session", error);
