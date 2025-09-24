@@ -95,8 +95,10 @@
                 <div class="d-flex flex-row flex-md-column gap-4">
                     <a href="{{ url_for('editStudents') + '?id='+unit_id }}" class="btn btn-secondary">
                         Edit Students</a>
-                    <a href="{{ url_for('editFacilitators') + '?id='+unit_id }}" class="btn btn-secondary">
+                    <a href="{{ url_for('editStaff') + '?id='+unit_id +  '&userType=facilitator'}}" class="btn btn-secondary">
                         Edit Facilitators</a>
+                    <a href="{{ url_for('editStaff') + '?id='+unit_id +  '&userType=coordinator'}}" class="btn btn-secondary">
+                        Edit Coordinators</a>
                 </div>
                 {% endif %}
             </div>
