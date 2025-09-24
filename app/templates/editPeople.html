@@ -87,7 +87,7 @@
 					<span class="col-4">{{ person.name }}</span>
 					<span class="col-2">
 						<form
-							action="{{ url_for('resend_email_to_facilitator') + '?unit_id='+unit_id+'&facilitator_id='+person.email }}"
+							action="{{ url_for('resend_email_to_staff') + '?unit_id='+unit_id+'&staff_id='+person.email+'&userType='+type  }}"
 							method="POST">
 							<button class="py-1 btn btn-secondary" type="submit">Resend Email</button>
 						</form>

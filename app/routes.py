@@ -656,39 +656,40 @@ def deleteStaff():
  
     if deleteStaffMemberConnection(unit_id, staff_email, userType):
         flask.flash("Staff member deleted successfully","success")
-        return flask.redirect(url_for('editStaff', id=unit_id))
+        return flask.redirect(url_for('editStaff', id=unit_id, userType=userType))
     
     flask.flash("Error deleting staff member", "error")
-    return flask.redirect(url_for('editStaff', id=unit_id))
+    return flask.redirect(url_for('editStaff', id=unit_id, userType=userType))
 
-@app.route('/resend_email_to_facilitator', methods=['POST'])
+@app.route('/resend_email_to_staff', methods=['POST'])
 @login_required
-def resend_email_to_facilitator() :
+def resend_email_to_staff() :
     unit_id = flask.request.args.get('unit_id')
+    userType = flask.request.args.get('userType')
     unit = GetUnit(unitID=unit_id)
 
     if not unit :
-        database_error('resend_email_to_facilitator', 'Unit')
+        database_error('resend_email_to_staff', 'Unit')
         return redirect(url_for('unitconfig'))
     else :
         unit = unit[0]
 
     if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin':
-        access_error('deleteFacilitator', 'Unit')
+        access_error('resend_email_to_staff', 'Unit')
         return redirect(url_for('unitconfig'))
     
-    facilitator_email = flask.request.args.get('facilitator_id')
-    facilitator = GetUser(email=facilitator_email)
+    staff_email = flask.request.args.get('staff_id')
+    person = GetUser(email=staff_email)
 
-    if facilitator is not None and unit in facilitator.unitsFacilitate :
-        if send_email_ses("noreply@uwaengineeringprojects.com", facilitator_email, 'welcome') :
+    if person is not None and unit in person.unitsFacilitate or person.unitsCoordinate :
+        if send_email_ses("noreply@uwaengineeringprojects.com", staff_email, 'welcome') :
             flask.flash("Welcome email successfully sent","success")
         else : flask.flash("Error sending email", "error")
     else :
-        database_error('resend_email_to_facilitator', 'User')
-        return redirect (url_for('editFacilitators', id=unit_id))
+        database_error('resend_email_to_staff', 'User')
+        return redirect (url_for('editStaff', id=unit_id, userType=userType))
     
-    return flask.redirect(url_for('editFacilitators', id=unit_id))
+    return flask.redirect(url_for('editStaff', id=unit_id, userType=userType))
 
 
 @app.route('/resend_email_to_user', methods=['POST'])
