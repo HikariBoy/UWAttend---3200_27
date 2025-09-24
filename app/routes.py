@@ -595,10 +595,11 @@ def deleteStudent():
     flask.flash("Error deleting student", "error")
     return flask.redirect(url_for('editStudents', id=unit_id))
 
-@app.route('/editFacilitators', methods=['GET'])
+@app.route('/editStaff', methods=['GET'])
 @login_required
-def editFacilitators():
+def editStaff():
     unit_id = flask.request.args.get('id')
+    userType = flask.request.args.get('userType')
     unit = GetUnit(unitID=unit_id)
 
     if not unit :
@@ -610,18 +611,26 @@ def editFacilitators():
     if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin' :
         access_error('editFacilitators', 'Unit')
         return redirect(url_for('unitconfig'))
+    
+    if not(userType == "facilitator" or userType == "coordinator") :
+        return redirect(url_for('unitconfig'))
 
-    facilitators = unit.facilitators
-    facilitator_list = []
+    staff_members = []
+    staff_list = []
+    
+    if userType == 'facilitator' :
+        staff_members = unit.facilitators
+    else :
+        staff_members = unit.coordinators
 
-    for facilitator in facilitators:
+    for person in staff_members:
         info = {
-            "name": f"{facilitator.firstName} {facilitator.lastName}",
-            "email": facilitator.email
+            "name": f"{person.firstName} {person.lastName}",
+            "email": person.email
         }
-        facilitator_list.append(info)
+        staff_list.append(info)
 
-    return flask.render_template('editPeople.html', unit_id=str(unit_id), unit=unit, type="facilitators", facilitators=facilitator_list)
+    return flask.render_template('editPeople.html', unit_id=str(unit_id), unit=unit, type=userType, staff_list=staff_list)
 
 @app.route('/deleteFacilitator', methods=['POST'])
 @login_required

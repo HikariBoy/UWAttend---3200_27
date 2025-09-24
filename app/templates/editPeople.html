@@ -46,7 +46,7 @@
 				</div>
 			</form>
 			{% else %}
-			<h4 class="text-center">Add Facilitator</h4>
+			<h4 class="text-center">Add {{ type|capitalize }}</h4>
 			<form action="/add_facilitator?id={{unit_id}}" method="POST">
 				<input id="resetEmail" class="form-control" name="resetEmail" type="text">
 				<div class="d-flex justify-content-center">
@@ -59,10 +59,10 @@
 
 		<!-- Table -->
 		<div class="col-md-8 col-12">
-			<h3 class="text-center">{% if type == "students" %} Student {% else %} Facilitator {% endif %} list for
+			<h3 class="text-center">{% if type == "students" %} Student {% else %} {{ type|capitalize }} {% endif %} list for
 				unit: {{ unit.unitCode }}</h3>
-			{% if type == "facilitators" %}
-			<p class="text-center">If the facilitator's name is placeholder placeholder, they likely haven't set up their account yet. Click resend to resend the welcome email.
+			{% if type != "students" %}
+			<p class="text-center">If the {{ type }}'s name is placeholder placeholder, they likely haven't set up their account yet. Click resend to resend the welcome email.
 			</p>
 			{% endif %}
 			<div class="container">
@@ -81,20 +81,20 @@
 				</div>
 				{% endfor %}
 				{% else %}
-				{% for facilitator in facilitators %}
+				{% for person in staff_list %}
 				<div class="row outline-table text-center py-1 d-flex align-items-center">
-					<span class="col-4">{{ facilitator.email }}</span>
-					<span class="col-4">{{ facilitator.name }}</span>
+					<span class="col-4">{{ person.email }}</span>
+					<span class="col-4">{{ person.name }}</span>
 					<span class="col-2">
 						<form
-							action="{{ url_for('resend_email_to_facilitator') + '?unit_id='+unit_id+'&facilitator_id='+facilitator.email }}"
+							action="{{ url_for('resend_email_to_facilitator') + '?unit_id='+unit_id+'&facilitator_id='+person.email }}"
 							method="POST">
 							<button class="py-1 btn btn-secondary" type="submit">Resend Email</button>
 						</form>
 					</span>
 					<span class="col-2">
 						<form
-							action="{{ url_for('deleteFacilitator') + '?unit_id='+unit_id+'&facilitator_id='+facilitator.email }}"
+							action="{{ url_for('deleteFacilitator') + '?unit_id='+unit_id+'&facilitator_id='+person.email }}"
 							method="POST">
 							<button class="py-1 btn btn-danger" type="submit">Delete</button>
 						</form>
