@@ -370,7 +370,31 @@ def unitconfig():
         }
         units_data.append(unit_info)
 
-    return flask.render_template('unit.html', units=units_data)
+    admin = False
+    other_units_data = []
+
+    if current_user.userType == 'admin' :
+        admin = True
+        all_units = GetUnit()
+
+        # Remove the user's own units
+        for unit in units_list :
+            if unit in all_units :
+                all_units.remove(unit)
+        
+        # Extract relevant data for each unit
+        for unit in all_units:
+            unit_info = {
+                "code": unit.unitCode,
+                "name": unit.unitName or "N/A",
+                "study_period": unit.studyPeriod,
+                "start_date": unit.startDate.strftime('%Y-%m-%d'),
+                "end_date": unit.endDate.strftime('%Y-%m-%d'),
+                "unit_id": str(unit.unitID)
+            }
+            other_units_data.append(unit_info)
+
+    return flask.render_template('unit.html', units=units_data, admin=admin, otherUnits=other_units_data)
 
 #UPDATE UNIT FORM
 @app.route('/updateunit', methods=['GET', 'POST'])
@@ -391,7 +415,7 @@ def updateunit():
         return flask.redirect(flask.url_for('unitconfig'))
     unit = unit_data[0]
 
-    if not userHasCoordinatorAccessToUnit(unit) :
+    if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin' :
         access_error('updateunit', 'Unit')
         return flask.redirect(flask.url_for('unitconfig'))
     
@@ -484,7 +508,7 @@ def editStudents():
     else :
         unit = unit[0]
 
-    if not userHasCoordinatorAccessToUnit(unit) :
+    if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin' :
         access_error('editStudents', 'Unit')
         return redirect(url_for('unitconfig'))
     
@@ -520,7 +544,7 @@ def uploadStudents():
     csv_form = UploadStudentForm()
     unit_id = flask.request.args.get('id')
 
-    if not userHasCoordinatorAccessToUnitByID(unit_id) :
+    if not userHasCoordinatorAccessToUnitByID(unit_id) and current_user.userType != 'admin' :
         access_error('uploadStudents', 'Unit')
         return redirect(url_for('unitconfig'))
 
@@ -559,7 +583,7 @@ def deleteStudent():
     else :
         unit = unit[0]
 
-    if not userHasCoordinatorAccessToUnit(unit) :
+    if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin':
         access_error('deleteStudent', 'Unit')
         return flask.redirect(url_for('unitconfig'))
 
@@ -583,7 +607,7 @@ def editFacilitators():
     else :
         unit = unit[0]
 
-    if not userHasCoordinatorAccessToUnit(unit) :
+    if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin' :
         access_error('editFacilitators', 'Unit')
         return redirect(url_for('unitconfig'))
 
@@ -611,7 +635,7 @@ def deleteFacilitator():
     else :
         unit = unit[0]
 
-    if not userHasCoordinatorAccessToUnit(unit) :
+    if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin':
         access_error('deleteFacilitator', 'Unit')
         return redirect(url_for('unitconfig'))
     
@@ -635,7 +659,7 @@ def resend_email_to_facilitator() :
     else :
         unit = unit[0]
 
-    if not userHasCoordinatorAccessToUnit(unit) :
+    if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin':
         access_error('deleteFacilitator', 'Unit')
         return redirect(url_for('unitconfig'))
     
@@ -1259,12 +1283,12 @@ def add_facilitator():
     
     unit = unit[0]
 
-    if not userHasCoordinatorAccessToUnit(unit) :
+    if not userHasCoordinatorAccessToUnit(unit) and current_user.userType != 'admin' :
         access_error('add_facilitator', 'Unit')
         return redirect(url_for('unitconfig'))
 
     if valid_email(email):
-        if unit in current_user.unitsCoordinate:
+        if unit in current_user.unitsCoordinate or current_user.userType == 'admin':
             user = GetUser(email=email)
             if user is None :
                 if AddUser(email, "placeholder", "placeholder", generate_temp_password(), "facilitator") :
@@ -1279,7 +1303,6 @@ def add_facilitator():
                 user = GetUser(email=email)
             if unit not in user.unitsFacilitate :
                 AddUnitToFacilitator(email, unit_id)
-                flask.flash("User added", 'success')
 
     facilitators = unit.facilitators
     facilitator_list = []
