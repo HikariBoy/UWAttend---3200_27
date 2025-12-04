@@ -24,7 +24,7 @@
     <h2>Session Configuration</h2>
     {% if update %}
     <p class="text-center">You are already in an active session.<br>
-        To configure a new session, first exit this session from the home page.
+        To configure a new session, first exit this session.
     </p>
     <h4 class="text-center">{{ unit }} <span id="currentSessionName">{{ currentSession.sessionName }}</span> <span id="currentSessionTime">{{ currentSession.sessionTime }}</span> <span id="currentSessionDate">{{ currentSession.sessionDate }}</span></h4>
     <p class="text-center">Edit the current session details below.</p>		
@@ -74,13 +74,25 @@
                 {% endif %}
                 {{ form.submit(class="btn btn-primary col-4") }}
             </div>
+            {% if update %}
+            <div class="mt-4 row justify-content-center">
+                <button type="button" id="exitSessionButton" class="btn btn-danger col-6">Exit Session</button>
+            </div>
+            {% endif %}
         </div>
     </div>
 </form>
+{% if update %}
+<p id="signedInElement" data-signedinnum={{ signedinnum }}></p>
+{% endif %}
 </div>
 
 {% include 'confirmSessionEdits.html'%}
 {% include 'joinExistingSession.html'%}
+{% if update %}
+	{% include 'exitSession.html'%}
+    <script src="{{url_for('static', filename='js/exit_session.js')}}"></script>
+{% endif %}
 <script src="{{url_for('static', filename='js/session_modals.js')}}"></script>
 <script src="{{url_for('static', filename='js/session_config.js')}}"></script>
 {% endblock %}
