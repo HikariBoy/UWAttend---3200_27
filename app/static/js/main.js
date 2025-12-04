@@ -76,3 +76,5 @@ const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstra
 setTimeout(function () {
     $('.alert:not(#serverAlert,#addUnitErrorMsgAlert)').alert('close');
 }, 3000); 
+
+

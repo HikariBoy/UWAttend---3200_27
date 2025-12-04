@@ -253,7 +253,13 @@ def updatesession():
 
     set_updatesession_form_select_options(current_session, current_unit, form)
 
-    return flask.render_template('session.html', form=form, perth_time=formatted_perth_time, update=True, currentSession=current_session, unit=current_unit.unitCode)
+    signed_in_count = 0
+
+    attendances = GetAttendance(input_sessionID=current_session.sessionID)
+    for attendance in attendances :
+        signed_in_count = signed_in_count + 1 if not attendance.signOutTime else signed_in_count
+
+    return flask.render_template('session.html', form=form, perth_time=formatted_perth_time, update=True, currentSession=current_session, unit=current_unit.unitCode, signedinnum=signed_in_count)
 
 @app.route('/checksessionexists', methods=['POST'])
 @login_required
