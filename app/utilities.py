@@ -362,7 +362,10 @@ def export_attendance_records_columns(current_user_id, current_user_type):
             attendance_info = f"[{session.sessionName}][{facilitator_name}]{sign_in_time};{sign_out_time};consent_given={consent_status}"
 
             # Store attendance_info under session_key
-            attendance_data[unique_key][session_key] = attendance_info
+            if (session_key in attendance_data[unique_key]) :
+                attendance_data[unique_key][session_key] += "," + attendance_info
+            else :
+                attendance_data[unique_key][session_key] = attendance_info
 
             # Format grade data according to your specified rules
             marks = attendance.marks if attendance.marks else ''
@@ -377,8 +380,12 @@ def export_attendance_records_columns(current_user_id, current_user_type):
             else:
                 grade_info = ''
 
-            # Store grade_info under session_key + '_Grade'
-            attendance_data[unique_key][f"{session_key}_Grade"] = grade_info
+            if (grade_info != '') :
+                # Store grade_info under session_key + '_Grade'
+                if (f"{session_key}_Grade" in attendance_data[unique_key]) :
+                    attendance_data[unique_key][f"{session_key}_Grade"] += "," + session.sessionName + ":" + grade_info
+                else :
+                    attendance_data[unique_key][f"{session_key}_Grade"] = session.sessionName + ":" + grade_info
 
         # Prepare the headers
         headers = [
