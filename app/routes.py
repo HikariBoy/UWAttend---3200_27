@@ -330,15 +330,14 @@ def checkstudentinothersession():
         # check if student has existing attendance (in this class) i.e this is not a sign-in, but a sign-out
         existing_attendance = GetAttendance(input_sessionID=session_id, studentID=studentID)
 
-        if existing_attendance :
-            return flask.jsonify({'result': "sign_out"})
+        if existing_attendance and existing_attendance[0]:
+            if existing_attendance[0].signOutTime is None :
+                return flask.jsonify({'result': "sign_out"})
 
         otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
 
         # if the student ID appears, and they haven't been signed out...
         if len(otherCurrentSessions) > 0 :
-            log_message("Student already in another session.")
-            
             return flask.jsonify({'result': "true", 'existingSessionName': otherCurrentSessions[0]['sessionName']})
         
         else :
