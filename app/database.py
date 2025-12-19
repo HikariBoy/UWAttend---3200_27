@@ -482,6 +482,26 @@ def SignStudentOut(attendanceID):
 
     return True
 
+def TransferStudentFromSession(attendanceID, newSessionName):
+
+    attendance = db.session.query(Attendance).filter(Attendance.attendanceID == attendanceID).first()
+
+    if attendance is None:
+        return False
+
+    signOutTime = get_perth_time().time()
+    attendance.signOutTime = signOutTime
+
+    if attendance.comments is None :
+        attendance.comments = "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%I:%M %p") + "."
+    else :
+        attendance.comments += "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%I:%M %p") + "."
+    
+    db.session.commit()
+
+    return True
+
+
 def RemoveSignOutTime(attendanceID):
 
     attendance = db.session.query(Attendance).filter(Attendance.attendanceID == attendanceID).first()

@@ -1258,8 +1258,7 @@ def add_student():
             if otherCurrentSessions is not None :
                 # sign them out of the other sesssion that they are in
                 for s_dict in otherCurrentSessions :
-                    status = SignStudentOut(s_dict['attendanceID'])
-                    print('signed student out of that other class...')
+                    status = TransferStudentFromSession(s_dict['attendanceID'], session.sessionName)
 
             # consent will be none if it is already yes or not required i.e. no changes required
             if consent_status != "none" :
