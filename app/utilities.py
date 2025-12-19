@@ -49,20 +49,6 @@ def access_error(route, db_table) :
     log_message('/' + route + " User can't access " + db_table)
     flask.flash("Error - please try again", 'error')
 
-def checkStudentInOtherSessions(studentID, session) :
-
-    currentSessions = GetCurrentSessions(session.unitID, session.sessionTime, session.sessionDate)
-
-    otherCurrentSessions = []
-
-    for s in currentSessions :
-        if s.sessionName != session.sessionName :
-            attendance_records = GetAttendance(input_sessionID=s.sessionID)
-            for a in attendance_records :
-                if str(a.studentID) == studentID and a.signOutTime is None :
-                    otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : s.sessionName})
-                    
-    return otherCurrentSessions
 
 # Set of functions used to read and populate students into the database from a csv file.
 # Checklist for future

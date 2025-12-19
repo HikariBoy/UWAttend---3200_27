@@ -402,11 +402,34 @@ def RemoveStudentFromSession(studentID, sessionID):
     else:
         return False
 
+def CheckStudentInOtherSessions(studentID, session) :
+
+    currentSessions = GetCurrentSessions(session.unitID, session.sessionTime, session.sessionDate)
+
+    otherCurrentSessions = []
+
+    for s in currentSessions :
+        if s.sessionName != session.sessionName :
+            attendance_records = GetAttendance(input_sessionID=s.sessionID)
+            for a in attendance_records :
+                if str(a.studentID) == studentID and a.signOutTime is None :
+                    otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : s.sessionName})
+                    
+    return otherCurrentSessions
+
 def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, login=None, consent=None, grade=None, comments=None):
     # Fetch the attendance record based on studentID
     attendance_record = db.session.query(Attendance).filter_by(studentID=studentID, sessionID=sessionID).first()
-    unitID = GetSession(sessionID=sessionID)[0].unitID
-    consent_required_for_unit = GetUnit(unitID=unitID)[0].consent
+    session = GetSession(sessionID=sessionID)
+    if session :
+        session = session[0]
+    else : return "Session not found"
+    unitID = session.unitID
+    unit = GetUnit(unitID=unitID)
+    if unit :
+        unit = unit[0]
+    else : return "Unit not found"
+    consent_required_for_unit = unit.consent
     student_record = db.session.query(Student).filter_by(studentID=studentID, unitID=unitID).first()
 
     if not attendance_record:
@@ -439,11 +462,16 @@ def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, logi
         if not login and not attendance_record.signOutTime:
             attendance_record.signOutTime = get_perth_time().time()
         if login and attendance_record.signOutTime:
-            message = f"Student temporarily signed out between {str(attendance_record.signOutTime).split('.')[0]} and {str(get_perth_time().time()).split('.')[0]}"
-            if comments: 
-                comments = comments + f" | {message}"
+            # Check if other sessions need to be signed into
+            otherCurrentSessions = CheckStudentInOtherSessions(studentID, session)
+            if otherCurrentSessions is not None:
+                for s_dict in otherCurrentSessions :
+                    status = TransferStudentFromSession(s_dict['attendanceID'], session.sessionName)
+            message = f"Student temporarily signed out between {str(attendance_record.signOutTime).split('.')[0]} and {str(get_perth_time().time()).split('.')[0]}. "
+            if attendance_record.comments: 
+                attendance_record.comments += message
             else:
-                comments = message
+                attendance_record.comments = message
             attendance_record.signOutTime = None
 
     if consent is not None:  # Boolean field
@@ -456,8 +484,6 @@ def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, logi
 
     if grade:
         attendance_record.marks = grade
-
-    attendance_record.comments = comments
 
     # Commit the changes to the database
     try:
