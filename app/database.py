@@ -493,9 +493,9 @@ def TransferStudentFromSession(attendanceID, newSessionName):
     attendance.signOutTime = signOutTime
 
     if attendance.comments is None :
-        attendance.comments = "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%I:%M %p") + "."
+        attendance.comments = "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%H:%M:%S") + "."
     else :
-        attendance.comments += "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%I:%M %p") + "."
+        attendance.comments += "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%H:%M:%S") + "."
     
     db.session.commit()
 
