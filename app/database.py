@@ -492,10 +492,12 @@ def TransferStudentFromSession(attendanceID, newSessionName):
     signOutTime = get_perth_time().time()
     attendance.signOutTime = signOutTime
 
+    message = "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%H:%M:%S") + ". "
+
     if attendance.comments is None :
-        attendance.comments = "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%H:%M:%S") + "."
+        attendance.comments = message
     else :
-        attendance.comments += "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%H:%M:%S") + "."
+        attendance.comments += message
     
     db.session.commit()
 
@@ -511,9 +513,9 @@ def RemoveSignOutTime(attendanceID):
 
     comments = attendance.comments
 
-    message = f"Student temporarily signed out between {str(attendance.signOutTime).split('.')[0]} and {str(get_perth_time().time()).split('.')[0]}"
+    message = f"Student temporarily signed out between {str(attendance.signOutTime).split('.')[0]} and {str(get_perth_time().time()).split('.')[0]}. "
     if comments: 
-        comments = comments + f" | {message}"
+        comments += message
     else:
         comments = message
     attendance.signOutTime = None

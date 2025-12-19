@@ -1251,6 +1251,10 @@ def add_student():
                         flask.flash(f"Error signing out {student.preferredName} {student.lastName}", 'error')
                 else:
                     status = RemoveSignOutTime(attendanceID=existing_attendance[0].attendanceID)
+                    otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
+                    if otherCurrentSessions is not None:
+                        for s_dict in otherCurrentSessions :
+                            status = TransferStudentFromSession(s_dict['attendanceID'], session.sessionName)
                 return flask.redirect(flask.url_for('home'))
             
             otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
