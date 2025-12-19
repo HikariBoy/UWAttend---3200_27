@@ -330,15 +330,14 @@ def checkstudentinothersession():
         # check if student has existing attendance (in this class) i.e this is not a sign-in, but a sign-out
         existing_attendance = GetAttendance(input_sessionID=session_id, studentID=studentID)
 
-        if existing_attendance :
-            return flask.jsonify({'result': "sign_out"})
+        if existing_attendance and existing_attendance[0]:
+            if existing_attendance[0].signOutTime is None :
+                return flask.jsonify({'result': "sign_out"})
 
-        otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
+        otherCurrentSessions = CheckStudentInOtherSessions(studentID, session)
 
         # if the student ID appears, and they haven't been signed out...
         if len(otherCurrentSessions) > 0 :
-            log_message("Student already in another session.")
-            
             return flask.jsonify({'result': "true", 'existingSessionName': otherCurrentSessions[0]['sessionName']})
         
         else :
@@ -1251,15 +1250,18 @@ def add_student():
                         flask.flash(f"Error signing out {student.preferredName} {student.lastName}", 'error')
                 else:
                     status = RemoveSignOutTime(attendanceID=existing_attendance[0].attendanceID)
+                    otherCurrentSessions = CheckStudentInOtherSessions(studentID, session)
+                    if otherCurrentSessions is not None:
+                        for s_dict in otherCurrentSessions :
+                            status = TransferStudentFromSession(s_dict['attendanceID'], session.sessionName)
                 return flask.redirect(flask.url_for('home'))
             
-            otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
+            otherCurrentSessions = CheckStudentInOtherSessions(studentID, session)
 
             if otherCurrentSessions is not None :
                 # sign them out of the other sesssion that they are in
                 for s_dict in otherCurrentSessions :
-                    status = SignStudentOut(s_dict['attendanceID'])
-                    print('signed student out of that other class...')
+                    status = TransferStudentFromSession(s_dict['attendanceID'], session.sessionName)
 
             # consent will be none if it is already yes or not required i.e. no changes required
             if consent_status != "none" :
