@@ -404,18 +404,22 @@ def RemoveStudentFromSession(studentID, sessionID):
 
 def CheckStudentInOtherSessions(studentID, session) :
 
-    currentSessions = GetCurrentSessions(session.unitID, session.sessionTime, session.sessionDate)
+    query = db.session.query(Attendance.attendanceID, Session.sessionName).join(Session).join(Student)
+    query = query.filter(
+        Session.unitID == session.unitID,
+        Session.sessionName != session.sessionName,
+        Session.sessionTime == session.sessionTime,
+        Session.sessionDate == session.sessionDate,
+        Student.studentID == studentID,
+        Attendance.signOutTime==None)
+    records = query.all()
 
     otherCurrentSessions = []
-
-    for s in currentSessions :
-        if s.sessionName != session.sessionName :
-            attendance_records = GetAttendance(input_sessionID=s.sessionID)
-            for a in attendance_records :
-                if str(a.studentID) == studentID and a.signOutTime is None :
-                    otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : s.sessionName})
-                    
+    for a in records :
+        otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : a.sessionName})
+    
     return otherCurrentSessions
+
 
 def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, login=None, consent=None, grade=None, comments=None):
     # Fetch the attendance record based on studentID
@@ -457,6 +461,9 @@ def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, logi
         except ValueError:
             message = f"Invalid time format for signOutTime: {signOutTime}"
             return message
+    
+    if comments :
+        attendance_record.comments = comments
 
     if login is not None:  # Boolean field
         if not login and not attendance_record.signOutTime:
@@ -484,6 +491,8 @@ def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, logi
 
     if grade:
         attendance_record.marks = grade
+
+
 
     # Commit the changes to the database
     try:
