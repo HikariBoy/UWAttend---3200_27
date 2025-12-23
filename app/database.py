@@ -457,6 +457,9 @@ def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, logi
         except ValueError:
             message = f"Invalid time format for signOutTime: {signOutTime}"
             return message
+    
+    if comments :
+        attendance_record.comments = comments
 
     if login is not None:  # Boolean field
         if not login and not attendance_record.signOutTime:
@@ -484,6 +487,8 @@ def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, logi
 
     if grade:
         attendance_record.marks = grade
+
+
 
     # Commit the changes to the database
     try:
