@@ -80,6 +80,11 @@ class CreateAccountForm(FlaskForm):
     password2 = PasswordField('Confirm password:', validators=[DataRequired(), password_check])
     submit = SubmitField('Create Account')
 
+class ProfileForm(FlaskForm) :
+    firstName   = StringField('First name:', validators=[DataRequired()])
+    lastName    = StringField('Last name:', validators=[DataRequired()])
+    submit = SubmitField('Save Changes')
+
 class ResetPasswordForm(FlaskForm):
     password1 = PasswordField('New password:', validators=[DataRequired()])
     password2 = PasswordField('Confirm new password:', validators=[DataRequired(), password_check])

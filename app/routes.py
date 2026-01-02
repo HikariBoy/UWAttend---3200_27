@@ -1031,6 +1031,31 @@ def remove_from_session():
         
     return flask.redirect(flask.url_for('home'))
 
+@app.route('/profile', methods=['GET','POST'])
+@login_required
+def profile():
+    log_message("/profile")
+   
+    form = ProfileForm()
+
+    if form.validate_on_submit():
+        fname = form.firstName.data
+        lname = form.lastName.data
+        if fname == "" :
+            fname = "placeholder"
+        if lname == "" :
+            lname = "placeholder"
+        EditUserNames(current_user.userID, fname, lname)
+        
+        return flask.redirect(flask.url_for('profile'))
+
+    email = current_user.email
+    accountType = current_user.userType
+    fname = current_user.firstName
+    lname = current_user.lastName
+
+    return flask.render_template('profile.html', form=form, email=email, accountType=accountType, fname=fname, lname=lname)
+
 # CREATE ACCOUNT - /create_account
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_account():
@@ -1074,8 +1099,6 @@ def create_account():
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     log_message("/forgot_password")
-    if current_user.is_authenticated:
-        return flask.redirect('home')
 
     if flask.request.method == 'POST':
         email = flask.request.form.get('resetEmail')
