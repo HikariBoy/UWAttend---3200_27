@@ -1035,8 +1035,18 @@ def remove_from_session():
 @login_required
 def profile():
     log_message("/profile")
+   
+    form = ProfileForm()
 
-    if flask.request.method == 'POST':
+    if form.validate_on_submit():
+        fname = form.firstName.data
+        lname = form.lastName.data
+        if fname == "" :
+            fname = "placeholder"
+        if lname == "" :
+            lname = "placeholder"
+        EditUserNames(current_user.userID, fname, lname)
+        
         return flask.redirect(flask.url_for('profile'))
 
     email = current_user.email
@@ -1044,7 +1054,7 @@ def profile():
     fname = current_user.firstName
     lname = current_user.lastName
 
-    return flask.render_template('profile.html', email=email, accountType=accountType, fname=fname, lname=lname)
+    return flask.render_template('profile.html', form=form, email=email, accountType=accountType, fname=fname, lname=lname)
 
 # CREATE ACCOUNT - /create_account
 @app.route('/create_account', methods=['GET', 'POST'])

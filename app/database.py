@@ -124,6 +124,21 @@ def AddUser(email, firstName, lastName, passwordHash, userType):
     
     return True
 
+def EditUserNames(userID, firstName, lastName) :
+
+    user = GetUser(userID=userID)
+    if not user :
+        return False
+    try :
+        user.firstName = firstName
+        user.lastName = lastName 
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        return False
+    return True
+
+
 def UpdateUser(email, firstName, lastName, passwordHash): # no userType as this should already be set 
 
     user = GetUser(email=email)
