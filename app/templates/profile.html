@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Flash Messages -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+{%if category == 'error'%}
+<div class="alert alert-danger alert-dismissable fade show d-flex justify-content-between" role="alert">
+	{{ message }}
+	<button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% else %}
+<div class="alert alert-success alert-dismissable fade show d-flex justify-content-between" role="alert">
+	{{ message }}
+	<button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+{% endfor %} {% endif %} {% endwith %}
+
+<div class="container-fluid">
+    <div class="mt-2 mx-md-5 mx-2 d-flex flex-column align-items-center">
+        <h2 class="mb-3">Profile</h2>
+
+    </div>
+    <div class="mb-4 vstack gap-3 justify-content-center">
+        <div class="row">
+            <div class="col text-end">Email:</div>
+            <div class="col">sampleemail@gmail.com</div>
+        </div>
+        <div class="row">
+            <div class="col text-end">Type:</div>
+            <div class="col">Administration</div>
+        </div>
+        <div class="row">
+            <div class="col text-end">First Name:</div>
+            <div class="col"><span id="first-name-text" class="me-4">Olivia</span> <button id="first-name-btn" class="btn btn-sm btn-secondary">Edit <i class="bi bi-pencil-square"></i></button></div>
+        </div>
+        <div class="row">
+            <div class="col text-end">Last Name:</div>
+            <div class="col"><span id="last-name-text" class="me-4">sdfsdfsdfsdsdf</span> <button id="last-name-btn" class="btn btn-sm btn-secondary">Edit <i class="bi bi-pencil-square"></i></button></div>
+        </div>
+    </div>
+    <div class="mb-4 d-flex gap-3 justify-content-center">
+        <a class="btn btn-primary" href="{{ url_for('forgot_password') }}">Reset Password</a>
+    </div>
+    
+</div>
+
+
+{% endblock %}

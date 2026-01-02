@@ -1031,6 +1031,12 @@ def remove_from_session():
         
     return flask.redirect(flask.url_for('home'))
 
+@app.route('/profile', methods=['GET','POST'])
+@login_required
+def profile():
+    log_message("/profile")
+    return flask.render_template('profile.html')
+
 # CREATE ACCOUNT - /create_account
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_account():
@@ -1074,8 +1080,6 @@ def create_account():
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     log_message("/forgot_password")
-    if current_user.is_authenticated:
-        return flask.redirect('home')
 
     if flask.request.method == 'POST':
         email = flask.request.form.get('resetEmail')
