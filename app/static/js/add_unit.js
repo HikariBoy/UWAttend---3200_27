@@ -7,7 +7,7 @@ $("#commentsenabled").change(function () {
 })
 
 function removeSessions(thisObj) {
-	sessionText = thisObj.attr("id");
+	sessionText = thisObj.text();
 	sessionsArray = $("#sessions").val().split("|");
 	index = sessionsArray.indexOf(sessionText)
 	sessionsArray.splice(index, 1)
@@ -18,7 +18,7 @@ function removeSessions(thisObj) {
 
 
 function removeComments(thisObj) {
-	commentText = thisObj.attr("id");
+	commentText = thisObj.text();
 	commentsArray = $("#comments").val().split("|");
 	index = commentsArray.indexOf(commentText)
 	commentsArray.splice(index, 1)
@@ -39,13 +39,13 @@ $(document).ready(function () {
 	//Load any data in hidden forms
 	sessionsArray = $("#sessions").val().split("|");
 	sessionsArray.forEach(element => {
-		newBadge = $("<span class='badge session-badge p-2' id='" + element + "'></span>").text(element);
+		newBadge = $("<span class='badge session-badge p-2'></span>").text(element);
 		$("#sessions-container").append(newBadge);
 	});
 
 	commentsArray = $("#comments").val().split("|");
 	commentsArray.forEach(element => {
-		newBadge = $("<span class='badge comment-badge p-2' id='" + element + "'></span>").text(element);
+		newBadge = $("<span class='badge comment-badge p-2'></span>").text(element);
 		$("#comments-container").append(newBadge);
 	});
 
@@ -55,7 +55,7 @@ $(document).ready(function () {
 			e.preventDefault();
 			if ($("#sessionnames").val()) {
 				curr = $("#sessions").val();
-				input = $("#sessionnames").val()
+				input = $("#sessionnames").val().replace(/\|/g, '-')
 				curr = curr + "|" + input;
 				$("#sessionnames").val("");
 				//remove redundant |
@@ -63,7 +63,7 @@ $(document).ready(function () {
 					curr = curr.substring(1);
 				}
 				$("#sessions").val(curr);
-				newBadge = $("<span class='badge session-badge p-2' id='" + input + "'></span>").text(input);
+				newBadge = $("<span class='badge session-badge p-2'></span>").text(input);
 				newBadge.on("click", function () {
 					removeSessions($(this));
 				})
