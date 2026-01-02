@@ -35,18 +35,20 @@
         </div>
         <div class="row">
             <div class="col text-end">First Name:</div>
-            <div class="col"><span id="first-name-text" class="me-4">{{ fname }}</span> <button id="first-name-btn" class="btn btn-sm btn-secondary">Edit <i class="bi bi-pencil-square"></i></button></div>
+            <div class="col" id="first-name-div">{{ fname }}</div>
         </div>
         <div class="row">
             <div class="col text-end">Last Name:</div>
-            <div class="col"><span id="last-name-text" class="me-4">{{ lname }}</span> <button id="last-name-btn" class="btn btn-sm btn-secondary">Edit <i class="bi bi-pencil-square"></i></button></div>
+            <div class="col" id=last-name-div>{{ lname }}</div>
         </div>
     </div>
     <div class="mb-4 d-flex gap-3 justify-content-center">
         <a class="btn btn-primary" href="{{ url_for('forgot_password') }}">Reset Password</a>
+        <button id="edit-names-button" class="btn btn-secondary" onclick="editNames()">Edit Names</button>
+        <button id="save-names-button" class="btn btn-success d-none" onclick="saveNames()">Save Names</button>
     </div>
     
 </div>
 
-
+<script src="{{url_for('static', filename='js/profile.js')}}"></script>
 {% endblock %}
