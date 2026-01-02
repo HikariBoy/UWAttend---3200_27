@@ -20,21 +20,21 @@ function removeStudent(id) {
 function detectChanges(commentSuggestions) {
     let inputString = $('#comments').val();
     console.log(inputString);
-    commentSuggestions.forEach(element => {
-        if (inputString.indexOf(element) >= 0) {
-            $('#' + element).fadeOut("fast", "linear")
+    commentSuggestions.forEach(suggestion => {
+        if (inputString.includes(suggestion.text())) {
+            suggestion.fadeOut("fast", "linear")
         }
         else {
-            $('#' + element).fadeIn("fast", "linear")
+            suggestion.fadeIn("fast", "linear")
         }
     });
 }
 
 $(document).ready(function () {
     const commentSuggestions = [];
-    $('.suggestion').each(function () {
-        commentSuggestions.push($(this).text())
-    })
+$('.suggestion').each(function () {
+    commentSuggestions.push($(this));
+});
 
     detectChanges(commentSuggestions);
     $('#comments').on("change keyup paste", function () {
@@ -42,7 +42,7 @@ $(document).ready(function () {
     })
 
     $('.suggestion').on('click', function () {
-        var suggestedText = $(this).attr('id');
+        var suggestedText = $(this).text();
         var commentsField = $('#comments');
         $(this).fadeOut("fast", "linear")
 
