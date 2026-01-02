@@ -82,7 +82,7 @@ $(document).ready(function () {
 			e.preventDefault();
 			if ($("#commentsuggestions").val()) {
 				curr = $("#comments").val();
-				input = $("#commentsuggestions").val()
+				input = $("#commentsuggestions").val().replace(/\|/g, '-')
 				curr = curr + "|" + input;
 				$("#commentsuggestions").val("");
 				//remove redundant |
@@ -90,7 +90,7 @@ $(document).ready(function () {
 					curr = curr.substring(1);
 				}
 				$("#comments").val(curr);
-				newBadge = $("<span class='badge comment-badge p-2' id='" + input + "'></span>").text(input);
+				newBadge = $("<span class='badge comment-badge p-2'></span>").text(input);
 				newBadge.on("click", function () {
 					removeComments($(this));
 				})
