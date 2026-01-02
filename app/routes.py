@@ -1035,7 +1035,16 @@ def remove_from_session():
 @login_required
 def profile():
     log_message("/profile")
-    return flask.render_template('profile.html')
+
+    if flask.request.method == 'POST':
+        return flask.redirect(flask.url_for('profile'))
+
+    email = current_user.email
+    accountType = current_user.userType
+    fname = current_user.firstName
+    lname = current_user.lastName
+
+    return flask.render_template('profile.html', email=email, accountType=accountType, fname=fname, lname=lname)
 
 # CREATE ACCOUNT - /create_account
 @app.route('/create_account', methods=['GET', 'POST'])
