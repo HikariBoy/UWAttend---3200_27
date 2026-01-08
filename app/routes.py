@@ -880,51 +880,60 @@ def addunit():
 	    
     return flask.render_template('addunit.html', form=form)
 
-@app.route('/export', methods=['GET', 'POST'])
+@app.route('/exportUnit', methods=['GET','POST'])
 @login_required
-def export_data():
-    log_message("/export")
-
-    log_message("/export Attempting to Export Database...")
+def exportUnit():
+    log_message("/exportUnit")
     zip_filename = 'database.zip'
-
-    unit_code = flask.request.args.get('unitCode') or flask.request.form.get('unitCode')
+    requestID = flask.request.args.get('requestID') or flask.request.form.get('requestID')
 
     if (current_user.userType == 'facilitator') :
-        access_error('export', 'Export')
+        access_error('export', 'Unit')
         return redirect(url_for('home'))
-
+    
     # Get database.zip filepath
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     zip_path = os.path.join(project_root, zip_filename)
 
-    current_user_id = current_user.userID
-    current_user_type = current_user.userType
+    @after_this_request
+    def delete_database(response):
+        try:
+            os.remove(zip_path)
+            log_message("/export Temporary Database Deleted")
+        except Exception as e:
+            log_message(str(e))
+        return response
 
-    # Call the function to export all data to the 'database.zip'
-    export_all_to_zip(zip_filename, current_user_id, current_user_type)
-
-    # If "All Units" is selected or no unitCode is provided, skip filtering
-    if unit_code and unit_code != 'all':
-        filtered_zip_filename = filter_exported_csv_by_unit(zip_filename, unit_code)
-
-        # Rename the filtered file to database.zip for consistent download name
-        filtered_zip_path = os.path.join(project_root, filtered_zip_filename)
-        if os.path.exists(filtered_zip_path):
-            os.rename(filtered_zip_path, zip_path)  # Rename to database.zip
-
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Export all coordinator's  units
+        if requestID == 'ownUnits' :
+            for unit in current_user.unitsCoordinate :
+                exportUnitToZip(zip_filename, unit.unitID, unit.unitCode, zipf)
+        # Export all units
+        elif requestID == 'otherUnits' :
+            if (current_user.userType == 'admin') :
+                units = GetUnits()
+                if units :
+                    for unit in units :
+                        exportUnitToZip(zip_filename, unit.unitID, unit.unitCode, zipf)
+            else :
+                access_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
+        # Export specified unit
+        else :
+            if not (userHasCoordinatorAccessToUnitByID(requestID) or current_user.userType == 'admin') :
+                access_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
+            unit = GetUnit(unitID=requestID)
+            if unit :
+                unit = unit[0]
+                exportUnitToZip(zip_filename, requestID, unit.unitCode, zipf)
+            else :
+                database_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
 
     # Check if the file was created successfully
     if os.path.exists(zip_path):
-        @after_this_request
-        def delete_database(response):
-            try:
-                os.remove(zip_path)
-                log_message("/export Temporary Database Deleted")
-            except Exception as e:
-                log_message(str(e))
-            return response
-
         # Serve the zip file for download
         response = send_file(zip_path, as_attachment=True)
         log_message("/export Admin Successfully Exported Database")
@@ -933,7 +942,6 @@ def export_data():
     else:
         # Handle the error if the zip file doesn't exist
         return "Error: Could not export the data.", 500
-
 
 # STUDENT - /student/
 @app.route('/student', methods=['POST'])

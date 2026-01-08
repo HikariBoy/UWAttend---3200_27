@@ -210,6 +210,51 @@ def GetAttendanceByIDAndFacilitator(sessionID, facilitatorID):
     attendance_records = query.all()
     return attendance_records
 
+def GetAttendancesForUnit(unitID) :
+
+    unit = GetUnit(unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    sessions = GetSession(unitID=unitID)
+    sessionIDs = [session.sessionID for session in sessions]
+    records = db.session.query(Attendance).filter(Attendance.sessionID.in_(sessionIDs)).all()
+
+    return records
+
+def GetAttendancesForUnitFullDetail(unitID) :
+    unit = GetUnit(unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    sessions = GetSession(unitID=unitID)
+    sessionIDs = [session.sessionID for session in sessions]
+
+    query = db.session.query(
+        Attendance,
+        Student,
+        Session,
+        Unit,
+        User
+    ).join(
+        Student, Attendance.studentID == Student.studentID
+    ).join(
+        Session, Attendance.sessionID == Session.sessionID
+    ).join(
+        Unit, Student.unitID == Unit.unitID
+    ).join(
+        User, Attendance.facilitatorID == User.userID
+    )
+
+    records = query.filter(Attendance.sessionID.in_(sessionIDs)).all()
+
+    return records
+
+
 def GetAttendance(attendanceID = None, input_sessionID = None, studentID = None):
 
     query = db.session.query(Attendance)
@@ -257,9 +302,9 @@ def GetSession(sessionID = None, unitID = None, return_all = False):
         # no parameters were supplied, and return_all not true so returning an empty list
         return []
 
-    attendance_records = query.all()
+    session_records = query.all()
     
-    return attendance_records
+    return session_records
 
 # Specifically for exporting to csv ONLY. GetSession() was changed so creating seperate function so sessions dont break
 def GetSessionForExport(sessionID = None, unitID = None):
@@ -289,6 +334,8 @@ def GetCurrentSessions(unitID, sessionTime, sessionDate) :
     return records
 
 
+
+
 def GetStudent(unitID = None, studentID = None, studentNumber = None):
 
     query = db.session.query(Student)
@@ -307,9 +354,9 @@ def GetStudent(unitID = None, studentID = None, studentNumber = None):
         print("You did not submit a parameter to use so returning all student records")
 
     
-    attendance_records = query.all()
+    student_records = query.all()
     
-    return attendance_records
+    return student_records
 
 def GetStudentByUnitAndNumber(unitID, studentNumber) :
     query = db.session.query(Student).filter(Student.unitID == unitID, Student.studentNumber == studentNumber)
@@ -370,6 +417,30 @@ def GetAllUsers():
     query = db.session.query(User)
 
     return query.all()
+
+def GetUsersForUnit(unitID) :
+
+    unit = GetUnit(unitID=unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    records = []
+    for facilitator in unit.facilitators :
+        records.append(facilitator)
+    for coordinator in unit.coordinators :
+        if not coordinator in records :
+            records.append(coordinator)
+
+
+    return records
+
+
+def GetUnits() :
+    records = db.session.query(Unit.unitID, Unit.unitCode).all()
+    return records
+
 
 def GetUnit(unitID = None, unitCode = None, studyPeriod = None):
 
