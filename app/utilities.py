@@ -242,6 +242,41 @@ def exportTableToCSV(records) :
 
     return csvfile.getvalue()
 
+def exportAttendanceTableFullDetailToCSV(records) :
+
+    columns = [
+        'studentNumber', 'firstName', 'lastName', 'title', 'preferredName', 'unitCode',
+        'sessionDate', 'sessionName', 'sessionTime', 'signInTime', 'signOutTime',
+        'marks', 'comments', 'consent'
+    ]
+
+    csvfile = StringIO()
+    writer = csv.writer(csvfile)
+    writer.writerow(columns)  # Write the header
+
+    # Iterate over each record and write to csvfile
+    for attendance, student, session, unit in records:
+        row = [
+            student.studentNumber,
+            student.firstName,
+            student.lastName,
+            student.title,
+            student.preferredName,
+            unit.unitCode,
+            session.sessionDate.strftime('%Y-%m-%d') if session.sessionDate else '',
+            session.sessionName,
+            session.sessionTime,
+            attendance.signInTime.strftime('%H:%M:%S') if attendance.signInTime else '',
+            attendance.signOutTime.strftime('%H:%M:%S') if attendance.signOutTime else '',
+            attendance.marks if attendance.marks else '', # Marks, blank if none
+            attendance.comments if attendance.comments else '', # Comments, blank if none
+            attendance.consent_given # Consent give: yes, no or not required (if unit is configured to not ask consent)
+        ]
+        writer.writerow(row)
+
+    return csvfile.getvalue()
+
+
 # Creates attendancerecord.csv for exporting
 def export_attendance_records_csv(current_user_id, current_user_type):
 
@@ -483,6 +518,14 @@ def exportUnitToZip(zip_filename, unitID) :
             unit_csv = exportTableToCSV(unit_records)
             zipf.writestr('unit.csv', unit_csv)
             print("Exported unit.csv")
+
+        attendance_full_detail_records = GetAttendancesForUnitFullDetail(unitID)
+        if not attendance_full_detail_records :
+            print("no attendance_full_detail records found")
+        else :
+            attendance_full_detail_csv = exportAttendanceTableFullDetailToCSV(attendance_full_detail_records)
+            zipf.writestr('attendance_full_detail.csv', attendance_full_detail_csv)
+            print("Exported attendance_full_detail.csv")
 
         
 

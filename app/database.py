@@ -219,12 +219,38 @@ def GetAttendancesForUnit(unitID) :
         return None
     
     sessions = GetSession(unitID=unitID)
-
     sessionIDs = [session.sessionID for session in sessions]
-
     records = db.session.query(Attendance).filter(Attendance.sessionID.in_(sessionIDs)).all()
 
     return records
+
+def GetAttendancesForUnitFullDetail(unitID) :
+    unit = GetUnit(unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    sessions = GetSession(unitID=unitID)
+    sessionIDs = [session.sessionID for session in sessions]
+
+    query = db.session.query(
+        Attendance,
+        Student,
+        Session,
+        Unit
+    ).join(
+        Student, Attendance.studentID == Student.studentID
+    ).join(
+        Session, Attendance.sessionID == Session.sessionID
+    ).join(
+        Unit, Student.unitID == Unit.unitID
+    )
+
+    records = query.filter(Attendance.sessionID.in_(sessionIDs)).all()
+
+    return records
+
 
 def GetAttendance(attendanceID = None, input_sessionID = None, studentID = None):
 
