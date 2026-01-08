@@ -289,6 +289,8 @@ def GetCurrentSessions(unitID, sessionTime, sessionDate) :
     return records
 
 
+
+
 def GetStudent(unitID = None, studentID = None, studentNumber = None):
 
     query = db.session.query(Student)
@@ -370,6 +372,25 @@ def GetAllUsers():
     query = db.session.query(User)
 
     return query.all()
+
+def GetUsersForUnit(unitID) :
+
+    unit = GetUnit(unitID=unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    records = []
+    for facilitator in unit.facilitators :
+        records.append(facilitator)
+    for coordinator in unit.coordinators :
+        if not coordinator in records :
+            records.append(coordinator)
+
+
+    return records
+
 
 def GetUnit(unitID = None, unitCode = None, studyPeriod = None):
 

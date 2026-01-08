@@ -242,7 +242,6 @@ def exportTableToCSV(records) :
 
     return csvfile.getvalue()
 
-
 # Creates attendancerecord.csv for exporting
 def export_attendance_records_csv(current_user_id, current_user_type):
 
@@ -452,6 +451,14 @@ def exportUnitToZip(zip_filename, unitID) :
             student_csv = exportTableToCSV(student_records)
             zipf.writestr('students.csv', student_csv)
             print("Exported students.csv")
+
+        user_records = GetUsersForUnit(unitID)
+        if not user_records :
+            print("no user records founds")
+        else :
+            user_csv = exportTableToCSV(user_records)
+            zipf.writestr('users.csv', user_csv)
+            print("Exported users.csv")
         
 
 
