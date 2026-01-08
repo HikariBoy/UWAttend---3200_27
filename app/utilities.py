@@ -221,6 +221,28 @@ def export_table_to_csv(fetch_function, current_user_id, current_user_type):
         print(f"No data found for {fetch_function}")
         return None
 
+
+# Export a table to csv
+def exportTableToCSV(records) :
+
+    # Get the column names from the model's attributes
+    columns = records[0].__table__.columns.keys()
+
+    # If exporting the User table, exclude the passwordHash column
+    columns = [col for col in columns if col not in ['passwordHash', 'token']]
+
+    # Use StringIO to write CSV data in-memory
+    csvfile = StringIO()
+    writer = csv.writer(csvfile)
+    writer.writerow(columns)  # Write the header
+
+    # Write each record as a row in the CSV
+    for record in records:
+        writer.writerow([getattr(record, col) for col in columns])
+
+    return csvfile.getvalue()
+
+
 # Creates attendancerecord.csv for exporting
 def export_attendance_records_csv(current_user_id, current_user_type):
 
@@ -284,12 +306,18 @@ def export_attendance_records_csv(current_user_id, current_user_type):
         print("No attendance records found")
         return None
 
-def export_attendance_records_columns(current_user_id, current_user_type):
+def export_attendance_records_columns(current_user_id, current_user_type, single_unit_export_id=None):
 
-    unit_ids = GetAccessibleUnitIDs(current_user_id)
-    if not unit_ids:
-        print("No units found for the current coordinator")
-        return None
+    unit_ids = []
+    if single_unit_export_id is not None :
+        unit_ids = [single_unit_export_id]
+    else: 
+        unit_ids = GetAccessibleUnitIDs(current_user_id)
+        if not unit_ids:
+            print("No units found for the current coordinator")
+            return None
+
+    print(unit_ids)
 
     # Query the attendance records joined with students, sessions, and units
     query = db.session.query(
@@ -308,8 +336,7 @@ def export_attendance_records_columns(current_user_id, current_user_type):
         User, Attendance.facilitatorID == User.userID
     )
 
-    if unit_ids:
-        query = query.filter(Unit.unitID.in_(unit_ids))
+    query = query.filter(Unit.unitID.in_(unit_ids))
 
     records = query.all()
 
@@ -414,9 +441,22 @@ def export_attendance_records_columns(current_user_id, current_user_type):
         print("No attendance records found.")
         return None
 
+#Export unit data to a ZIP file containing multiple CSV files
+def exportUnitToZip(zip_filename, unitID) :
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+
+        student_records = GetStudent(unitID=unitID)
+        if not student_records :
+            print("no student records found")
+        else :
+            student_csv = exportTableToCSV(student_records)
+            zipf.writestr('students.csv', student_csv)
+            print("Exported students.csv")
+        
+
 
 # Export all tables to a single ZIP file containing multiple CSV files
-def export_all_to_zip(zip_filename, current_user_id, current_user_type):
+def export_all_to_zip(zip_filename, current_user_id, current_user_type, single_unit_export_id=None):
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
 
         # Export the Student table
@@ -458,7 +498,7 @@ def export_all_to_zip(zip_filename, current_user_id, current_user_type):
             print("Exported attendancerecord.csv")
 
         # Export the Attendance Records CSV
-        attendance_records_columns = export_attendance_records_columns(current_user_id, current_user_type)
+        attendance_records_columns = export_attendance_records_columns(current_user_id, current_user_type, single_unit_export_id=single_unit_export_id)
         if attendance_records_columns:
             zipf.writestr('attendancerecordCOLUMNS.csv', attendance_records_columns)
             print("Exported attendancerecordCOLUMNS.csv")
@@ -466,15 +506,8 @@ def export_all_to_zip(zip_filename, current_user_id, current_user_type):
     print(f"All tables have been exported to {zip_filename}")
 
 # Function to filter CSV files by unitCode
-def filter_exported_csv_by_unit(zip_filename, unit_code):
-    print(f"Filtering exported CSVs by unitCode: {unit_code}")
-
-    # Get the unit ID from the unitCode
-    unit_id = get_unit_id_by_code(unit_code)
-
-    if not unit_id:
-        print(f"No unit found for unitCode: {unit_code}")
-        return zip_filename
+def filter_exported_csv_by_unit(zip_filename, unitID):
+    print(f"Filtering exported CSVs by unitID: {unitID}")
 
     # Create a new ZIP file to store filtered CSVs
     filtered_zip_filename = "filtered_" + zip_filename

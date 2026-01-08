@@ -307,9 +307,9 @@ def GetStudent(unitID = None, studentID = None, studentNumber = None):
         print("You did not submit a parameter to use so returning all student records")
 
     
-    attendance_records = query.all()
+    student_records = query.all()
     
-    return attendance_records
+    return student_records
 
 def GetStudentByUnitAndNumber(unitID, studentNumber) :
     query = db.session.query(Student).filter(Student.unitID == unitID, Student.studentNumber == studentNumber)

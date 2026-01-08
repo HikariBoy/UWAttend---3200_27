@@ -30,7 +30,7 @@
             <!-- "Add Unit" Button -->
             <a href="{{ url_for('addunit') }}" class="btn btn-success col-4">Add Unit</a>
             <!-- "Export All" Button -->
-            <form method="GET" action="{{ url_for('export_data') }}" class="col-4">
+            <form method="GET" action="{{ url_for('exportUnit') }}" class="col-4">
                 <button type="submit" class="btn btn-primary w-100">Export All Units</button>
             </form>
         </div>
@@ -65,8 +65,8 @@
                 <div class="col-md d-none d-md-inline">{{ unit.end_date }}</div>
                 <!-- Export Button for each Unit -->
                 <div class="col-md col-12">
-                    <form method="GET" action="{{ url_for('export_data') }}">
-                        <input type="hidden" name="unitCode" value="{{ unit.code }}">
+                    <form method="GET" action="{{ url_for('exportUnit') }}">
+                        <input type="hidden" name="unitID" value="{{ unit.unit_id }}">
                         <button type="submit" class="btn btn-primary">Export</button>
                     </form>
                 </div>
@@ -118,8 +118,8 @@
                 <div class="col-md d-none d-md-inline">{{ unit.end_date }}</div>
                 <!-- Export Button for each Unit -->
                 <div class="col-md col-12">
-                    <form method="GET" action="{{ url_for('export_data') }}">
-                        <input type="hidden" name="unitCode" value="{{ unit.code }}">
+                    <form method="GET" action="{{ url_for('exportUnit') }}">
+                        <input type="hidden" name="unitID" value="{{ unit.unit_id }}">
                         <button type="submit" class="btn btn-primary">Export</button>
                     </form>
                 </div>
