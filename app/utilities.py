@@ -586,7 +586,6 @@ def exportUnitToZip(zip_filename, unitID) :
         else :
             student_csv = exportTableToCSV(student_records)
             zipf.writestr('students.csv', student_csv)
-            print("Exported students.csv")
 
         user_records = GetUsersForUnit(unitID)
         if not user_records :
@@ -594,7 +593,6 @@ def exportUnitToZip(zip_filename, unitID) :
         else :
             user_csv = exportTableToCSV(user_records)
             zipf.writestr('users.csv', user_csv)
-            print("Exported users.csv")
         
         attendance_records = GetAttendancesForUnit(unitID)
         if not attendance_records :
@@ -602,7 +600,6 @@ def exportUnitToZip(zip_filename, unitID) :
         else :
             attendance_csv = exportTableToCSV(attendance_records)
             zipf.writestr('attendance.csv', attendance_csv)
-            print("Exported attendance.csv")
 
         session_records = GetSessionForExport(unitID=unitID)
         if not session_records :
@@ -610,7 +607,6 @@ def exportUnitToZip(zip_filename, unitID) :
         else :
             session_csv = exportTableToCSV(session_records)
             zipf.writestr('session.csv', session_csv)
-            print("Exported session.csv")
 
         unit_records = GetUnit(unitID=unitID)
         if not unit_records :
@@ -618,7 +614,6 @@ def exportUnitToZip(zip_filename, unitID) :
         else :
             unit_csv = exportTableToCSV(unit_records)
             zipf.writestr('unit.csv', unit_csv)
-            print("Exported unit.csv")
 
         attendance_full_detail_records = GetAttendancesForUnitFullDetail(unitID)
         if not attendance_full_detail_records :
@@ -627,14 +622,10 @@ def exportUnitToZip(zip_filename, unitID) :
             # export as one attendance per row
             attendance_full_detail_csv = exportAttendanceFullDetailToCSV(attendance_full_detail_records)
             zipf.writestr('attendance_full_detail.csv', attendance_full_detail_csv)
-            print("Exported attendance_full_detail.csv")
 
             # export as one student per row (COLUMNS csv)
             attendance_full_detail_COLUMNS_csv = exportAttendanceFullDetailToCSVCOLUMNS(attendance_full_detail_records)
             zipf.writestr('attendance_full_detailCOLUMNS.csv', attendance_full_detail_COLUMNS_csv)
-            print("Exported attendance_full_detailCOLUMNS.csv")
-
-        
 
 
 # Export all tables to a single ZIP file containing multiple CSV files
