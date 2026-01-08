@@ -943,62 +943,6 @@ def exportUnit():
         # Handle the error if the zip file doesn't exist
         return "Error: Could not export the data.", 500
 
-
-@app.route('/export', methods=['GET', 'POST'])
-@login_required
-def export_data():
-    log_message("/export")
-
-    log_message("/export Attempting to Export Database...")
-    zip_filename = 'database.zip'
-
-    unitID = flask.request.args.get('unitID') or flask.request.form.get('unitID')
-
-    if (current_user.userType == 'facilitator') :
-        access_error('export', 'Export')
-        return redirect(url_for('home'))
-
-    # Get database.zip filepath
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    zip_path = os.path.join(project_root, zip_filename)
-
-    current_user_id = current_user.userID
-    current_user_type = current_user.userType
-
-    # Call the function to export all data to the 'database.zip'
-    export_all_to_zip(zip_filename, current_user_id, current_user_type, single_unit_export_id=unitID)
-
-    # If "All Units" is selected or no unitCode is provided, skip filtering
-    if unitID and unitID != 'all':
-        filtered_zip_filename = filter_exported_csv_by_unit(zip_filename, unitID)
-
-        # Rename the filtered file to database.zip for consistent download name
-        filtered_zip_path = os.path.join(project_root, filtered_zip_filename)
-        if os.path.exists(filtered_zip_path):
-            os.rename(filtered_zip_path, zip_path)  # Rename to database.zip
-
-
-    # Check if the file was created successfully
-    if os.path.exists(zip_path):
-        @after_this_request
-        def delete_database(response):
-            try:
-                os.remove(zip_path)
-                log_message("/export Temporary Database Deleted")
-            except Exception as e:
-                log_message(str(e))
-            return response
-
-        # Serve the zip file for download
-        response = send_file(zip_path, as_attachment=True)
-        log_message("/export Admin Successfully Exported Database")
-        return response
-
-    else:
-        # Handle the error if the zip file doesn't exist
-        return "Error: Could not export the data.", 500
-
-
 # STUDENT - /student/
 @app.route('/student', methods=['POST'])
 @login_required
