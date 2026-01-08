@@ -476,6 +476,14 @@ def exportUnitToZip(zip_filename, unitID) :
             zipf.writestr('session.csv', session_csv)
             print("Exported session.csv")
 
+        unit_records = GetUnit(unitID=unitID)
+        if not unit_records :
+            print("no unit records found")
+        else :
+            unit_csv = exportTableToCSV(unit_records)
+            zipf.writestr('unit.csv', unit_csv)
+            print("Exported unit.csv")
+
         
 
 
