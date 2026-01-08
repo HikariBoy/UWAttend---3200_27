@@ -885,33 +885,55 @@ def addunit():
 def exportUnit():
     log_message("/exportUnit")
     zip_filename = 'database.zip'
-    unitID = flask.request.args.get('unitID') or flask.request.form.get('unitID')
+    requestID = flask.request.args.get('requestID') or flask.request.form.get('requestID')
 
     if (current_user.userType == 'facilitator') :
-        access_error('export', 'Export')
-        return redirect(url_for('unit'))
-    
-    if not (userHasCoordinatorAccessToUnitByID(unitID) or current_user.userType == 'admin') :
-        access_error('export', 'Export')
-        return redirect(url_for('unit'))
+        access_error('export', 'Unit')
+        return redirect(url_for('home'))
     
     # Get database.zip filepath
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     zip_path = os.path.join(project_root, zip_filename)
 
-    exportUnitToZip(zip_filename, unitID)
+    @after_this_request
+    def delete_database(response):
+        try:
+            os.remove(zip_path)
+            log_message("/export Temporary Database Deleted")
+        except Exception as e:
+            log_message(str(e))
+        return response
 
-        # Check if the file was created successfully
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Export all coordinator's  units
+        if requestID == 'ownUnits' :
+            for unit in current_user.unitsCoordinate :
+                exportUnitToZip(zip_filename, unit.unitID, unit.unitCode, zipf)
+        # Export all units
+        elif requestID == 'otherUnits' :
+            if (current_user.userType == 'admin') :
+                units = GetUnits()
+                if units :
+                    for unit in units :
+                        exportUnitToZip(zip_filename, unit.unitID, unit.unitCode, zipf)
+            else :
+                access_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
+        # Export specified unit
+        else :
+            if not (userHasCoordinatorAccessToUnitByID(requestID) or current_user.userType == 'admin') :
+                access_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
+            unit = GetUnit(unitID=requestID)
+            if unit :
+                unit = unit[0]
+                exportUnitToZip(zip_filename, requestID, unit.unitCode, zipf)
+            else :
+                database_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
+
+    # Check if the file was created successfully
     if os.path.exists(zip_path):
-        @after_this_request
-        def delete_database(response):
-            try:
-                os.remove(zip_path)
-                log_message("/export Temporary Database Deleted")
-            except Exception as e:
-                log_message(str(e))
-            return response
-
         # Serve the zip file for download
         response = send_file(zip_path, as_attachment=True)
         log_message("/export Admin Successfully Exported Database")

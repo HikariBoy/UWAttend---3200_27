@@ -437,6 +437,11 @@ def GetUsersForUnit(unitID) :
     return records
 
 
+def GetUnits() :
+    records = db.session.query(Unit.unitID, Unit.unitCode).all()
+    return records
+
+
 def GetUnit(unitID = None, unitCode = None, studyPeriod = None):
 
     query = db.session.query(Unit)

@@ -577,43 +577,42 @@ def export_attendance_records_columns(current_user_id, current_user_type, single
         return None
 
 #Export unit data to a ZIP file containing multiple CSV files
-def exportUnitToZip(zip_filename, unitID) :
-    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+def exportUnitToZip(zip_filename, unitID, unitCode, zipf) :
 
         student_records = GetStudent(unitID=unitID)
         if not student_records :
             print("no student records found")
         else :
             student_csv = exportTableToCSV(student_records)
-            zipf.writestr('students.csv', student_csv)
+            zipf.writestr(unitCode + '_students.csv', student_csv)
 
         user_records = GetUsersForUnit(unitID)
         if not user_records :
             print("no user records founds")
         else :
             user_csv = exportTableToCSV(user_records)
-            zipf.writestr('users.csv', user_csv)
+            zipf.writestr(unitCode + '_users.csv', user_csv)
         
         attendance_records = GetAttendancesForUnit(unitID)
         if not attendance_records :
             print("no attendance records found")
         else :
             attendance_csv = exportTableToCSV(attendance_records)
-            zipf.writestr('attendance.csv', attendance_csv)
+            zipf.writestr(unitCode + '_attendance.csv', attendance_csv)
 
         session_records = GetSessionForExport(unitID=unitID)
         if not session_records :
             print("no session records found")
         else :
             session_csv = exportTableToCSV(session_records)
-            zipf.writestr('session.csv', session_csv)
+            zipf.writestr(unitCode + '_session.csv', session_csv)
 
         unit_records = GetUnit(unitID=unitID)
         if not unit_records :
             print("no unit records found")
         else :
             unit_csv = exportTableToCSV(unit_records)
-            zipf.writestr('unit.csv', unit_csv)
+            zipf.writestr(unitCode + '_unit.csv', unit_csv)
 
         attendance_full_detail_records = GetAttendancesForUnitFullDetail(unitID)
         if not attendance_full_detail_records :
@@ -621,11 +620,11 @@ def exportUnitToZip(zip_filename, unitID) :
         else :
             # export as one attendance per row
             attendance_full_detail_csv = exportAttendanceFullDetailToCSV(attendance_full_detail_records)
-            zipf.writestr('attendance_full_detail.csv', attendance_full_detail_csv)
+            zipf.writestr(unitCode + '_attendance_full_detail.csv', attendance_full_detail_csv)
 
             # export as one student per row (COLUMNS csv)
             attendance_full_detail_COLUMNS_csv = exportAttendanceFullDetailToCSVCOLUMNS(attendance_full_detail_records)
-            zipf.writestr('attendance_full_detailCOLUMNS.csv', attendance_full_detail_COLUMNS_csv)
+            zipf.writestr(unitCode + '_attendance_full_detailCOLUMNS.csv', attendance_full_detail_COLUMNS_csv)
 
 
 # Export all tables to a single ZIP file containing multiple CSV files
@@ -752,16 +751,22 @@ def userHasCoordinatorAccessToUnit(unit) :
 def userHasCoordinatorAccessToUnitByID(unit_id) :
     
     for u in current_user.unitsCoordinate :
-        if u.unitID == int(unit_id) :
-            return True
+        try :
+            if u.unitID == int(unit_id) :
+                return True
+        except :
+            return False
         
     return False
 
 def userHasFacilitatorAccessToUnitByID(unit_id) :
     
     for u in current_user.unitsFacilitate :
-        if u.unitID == int(unit_id) :
-            return True
+        try :
+            if u.unitID == int(unit_id) :
+                return True
+        except :
+            return False
 
     return False
 
