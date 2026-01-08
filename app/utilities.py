@@ -242,12 +242,12 @@ def exportTableToCSV(records) :
 
     return csvfile.getvalue()
 
-def exportAttendanceTableFullDetailToCSV(records) :
+def exportAttendanceFullDetailToCSV(records) :
 
     columns = [
         'studentNumber', 'firstName', 'lastName', 'title', 'preferredName', 'unitCode',
         'sessionDate', 'sessionName', 'sessionTime', 'signInTime', 'signOutTime',
-        'marks', 'comments', 'consent'
+        'marks', 'comments', 'consent', 'signedInBy'
     ]
 
     csvfile = StringIO()
@@ -255,7 +255,7 @@ def exportAttendanceTableFullDetailToCSV(records) :
     writer.writerow(columns)  # Write the header
 
     # Iterate over each record and write to csvfile
-    for attendance, student, session, unit in records:
+    for attendance, student, session, unit, user in records:
         row = [
             student.studentNumber,
             student.firstName,
@@ -270,7 +270,8 @@ def exportAttendanceTableFullDetailToCSV(records) :
             attendance.signOutTime.strftime('%H:%M:%S') if attendance.signOutTime else '',
             attendance.marks if attendance.marks else '', # Marks, blank if none
             attendance.comments if attendance.comments else '', # Comments, blank if none
-            attendance.consent_given # Consent give: yes, no or not required (if unit is configured to not ask consent)
+            attendance.consent_given, # Consent give: yes, no or not required (if unit is configured to not ask consent)
+            user.firstName + " " + user.lastName
         ]
         writer.writerow(row)
 
@@ -523,7 +524,7 @@ def exportUnitToZip(zip_filename, unitID) :
         if not attendance_full_detail_records :
             print("no attendance_full_detail records found")
         else :
-            attendance_full_detail_csv = exportAttendanceTableFullDetailToCSV(attendance_full_detail_records)
+            attendance_full_detail_csv = exportAttendanceFullDetailToCSV(attendance_full_detail_records)
             zipf.writestr('attendance_full_detail.csv', attendance_full_detail_csv)
             print("Exported attendance_full_detail.csv")
 

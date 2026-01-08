@@ -238,13 +238,16 @@ def GetAttendancesForUnitFullDetail(unitID) :
         Attendance,
         Student,
         Session,
-        Unit
+        Unit,
+        User
     ).join(
         Student, Attendance.studentID == Student.studentID
     ).join(
         Session, Attendance.sessionID == Session.sessionID
     ).join(
         Unit, Student.unitID == Unit.unitID
+    ).join(
+        User, Attendance.facilitatorID == User.userID
     )
 
     records = query.filter(Attendance.sessionID.in_(sessionIDs)).all()
