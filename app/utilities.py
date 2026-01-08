@@ -460,6 +460,15 @@ def exportUnitToZip(zip_filename, unitID) :
             zipf.writestr('users.csv', user_csv)
             print("Exported users.csv")
         
+        attendance_records = GetAttendancesForUnit(unitID)
+        if not attendance_records :
+            print("no attendance records found")
+        else :
+            attendance_csv = exportTableToCSV(attendance_records)
+            zipf.writestr('attendance.csv', attendance_csv)
+            print("Exported attendance.csv")
+
+        
 
 
 # Export all tables to a single ZIP file containing multiple CSV files

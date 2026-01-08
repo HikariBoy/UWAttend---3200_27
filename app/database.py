@@ -210,6 +210,22 @@ def GetAttendanceByIDAndFacilitator(sessionID, facilitatorID):
     attendance_records = query.all()
     return attendance_records
 
+def GetAttendancesForUnit(unitID) :
+
+    unit = GetUnit(unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    sessions = GetSession(unitID=unitID)
+
+    sessionIDs = [session.sessionID for session in sessions]
+
+    records = db.session.query(Attendance).filter(Attendance.sessionID.in_(sessionIDs)).all()
+
+    return records
+
 def GetAttendance(attendanceID = None, input_sessionID = None, studentID = None):
 
     query = db.session.query(Attendance)
@@ -257,9 +273,9 @@ def GetSession(sessionID = None, unitID = None, return_all = False):
         # no parameters were supplied, and return_all not true so returning an empty list
         return []
 
-    attendance_records = query.all()
+    session_records = query.all()
     
-    return attendance_records
+    return session_records
 
 # Specifically for exporting to csv ONLY. GetSession() was changed so creating seperate function so sessions dont break
 def GetSessionForExport(sessionID = None, unitID = None):
