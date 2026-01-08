@@ -468,6 +468,14 @@ def exportUnitToZip(zip_filename, unitID) :
             zipf.writestr('attendance.csv', attendance_csv)
             print("Exported attendance.csv")
 
+        session_records = GetSessionForExport(unitID=unitID)
+        if not session_records :
+            print("no session records found")
+        else :
+            session_csv = exportTableToCSV(session_records)
+            zipf.writestr('session.csv', session_csv)
+            print("Exported session.csv")
+
         
 
 
