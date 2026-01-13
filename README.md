@@ -25,7 +25,7 @@ ssh-add ./path/filename.pem
 To get started, clone the repository:
 
 ``` shell
-git clone https://github.com/DeltaO3/UWAttend---3200_27.git UWAttend
+git clone https://github.com/HikariBoy/UWAttend---3200_27.git UWAttend
 cd UWAttend
 ```
 
