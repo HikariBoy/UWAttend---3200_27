@@ -124,6 +124,21 @@ def AddUser(email, firstName, lastName, passwordHash, userType):
     
     return True
 
+def EditUserNames(userID, firstName, lastName) :
+
+    user = GetUser(userID=userID)
+    if not user :
+        return False
+    try :
+        user.firstName = firstName
+        user.lastName = lastName 
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        return False
+    return True
+
+
 def UpdateUser(email, firstName, lastName, passwordHash): # no userType as this should already be set 
 
     user = GetUser(email=email)
@@ -195,6 +210,51 @@ def GetAttendanceByIDAndFacilitator(sessionID, facilitatorID):
     attendance_records = query.all()
     return attendance_records
 
+def GetAttendancesForUnit(unitID) :
+
+    unit = GetUnit(unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    sessions = GetSession(unitID=unitID)
+    sessionIDs = [session.sessionID for session in sessions]
+    records = db.session.query(Attendance).filter(Attendance.sessionID.in_(sessionIDs)).all()
+
+    return records
+
+def GetAttendancesForUnitFullDetail(unitID) :
+    unit = GetUnit(unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    sessions = GetSession(unitID=unitID)
+    sessionIDs = [session.sessionID for session in sessions]
+
+    query = db.session.query(
+        Attendance,
+        Student,
+        Session,
+        Unit,
+        User
+    ).join(
+        Student, Attendance.studentID == Student.studentID
+    ).join(
+        Session, Attendance.sessionID == Session.sessionID
+    ).join(
+        Unit, Student.unitID == Unit.unitID
+    ).join(
+        User, Attendance.facilitatorID == User.userID
+    )
+
+    records = query.filter(Attendance.sessionID.in_(sessionIDs)).all()
+
+    return records
+
+
 def GetAttendance(attendanceID = None, input_sessionID = None, studentID = None):
 
     query = db.session.query(Attendance)
@@ -242,9 +302,9 @@ def GetSession(sessionID = None, unitID = None, return_all = False):
         # no parameters were supplied, and return_all not true so returning an empty list
         return []
 
-    attendance_records = query.all()
+    session_records = query.all()
     
-    return attendance_records
+    return session_records
 
 # Specifically for exporting to csv ONLY. GetSession() was changed so creating seperate function so sessions dont break
 def GetSessionForExport(sessionID = None, unitID = None):
@@ -274,6 +334,8 @@ def GetCurrentSessions(unitID, sessionTime, sessionDate) :
     return records
 
 
+
+
 def GetStudent(unitID = None, studentID = None, studentNumber = None):
 
     query = db.session.query(Student)
@@ -292,9 +354,9 @@ def GetStudent(unitID = None, studentID = None, studentNumber = None):
         print("You did not submit a parameter to use so returning all student records")
 
     
-    attendance_records = query.all()
+    student_records = query.all()
     
-    return attendance_records
+    return student_records
 
 def GetStudentByUnitAndNumber(unitID, studentNumber) :
     query = db.session.query(Student).filter(Student.unitID == unitID, Student.studentNumber == studentNumber)
@@ -356,6 +418,30 @@ def GetAllUsers():
 
     return query.all()
 
+def GetUsersForUnit(unitID) :
+
+    unit = GetUnit(unitID=unitID)
+    if unit :
+        unit = unit[0]
+    else :
+        return None
+    
+    records = []
+    for facilitator in unit.facilitators :
+        records.append(facilitator)
+    for coordinator in unit.coordinators :
+        if not coordinator in records :
+            records.append(coordinator)
+
+
+    return records
+
+
+def GetUnits() :
+    records = db.session.query(Unit.unitID, Unit.unitCode).all()
+    return records
+
+
 def GetUnit(unitID = None, unitCode = None, studyPeriod = None):
 
     query = db.session.query(Unit)
@@ -402,11 +488,38 @@ def RemoveStudentFromSession(studentID, sessionID):
     else:
         return False
 
+def CheckStudentInOtherSessions(studentID, session) :
+
+    query = db.session.query(Attendance.attendanceID, Session.sessionName).join(Session).join(Student)
+    query = query.filter(
+        Session.unitID == session.unitID,
+        Session.sessionName != session.sessionName,
+        Session.sessionTime == session.sessionTime,
+        Session.sessionDate == session.sessionDate,
+        Student.studentID == studentID,
+        Attendance.signOutTime==None)
+    records = query.all()
+
+    otherCurrentSessions = []
+    for a in records :
+        otherCurrentSessions.append({"attendanceID" : a.attendanceID, "sessionName" : a.sessionName})
+    
+    return otherCurrentSessions
+
+
 def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, login=None, consent=None, grade=None, comments=None):
     # Fetch the attendance record based on studentID
     attendance_record = db.session.query(Attendance).filter_by(studentID=studentID, sessionID=sessionID).first()
-    unitID = GetSession(sessionID=sessionID)[0].unitID
-    consent_required_for_unit = GetUnit(unitID=unitID)[0].consent
+    session = GetSession(sessionID=sessionID)
+    if session :
+        session = session[0]
+    else : return "Session not found"
+    unitID = session.unitID
+    unit = GetUnit(unitID=unitID)
+    if unit :
+        unit = unit[0]
+    else : return "Unit not found"
+    consent_required_for_unit = unit.consent
     student_record = db.session.query(Student).filter_by(studentID=studentID, unitID=unitID).first()
 
     if not attendance_record:
@@ -434,16 +547,24 @@ def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, logi
         except ValueError:
             message = f"Invalid time format for signOutTime: {signOutTime}"
             return message
+    
+    if comments :
+        attendance_record.comments = comments
 
     if login is not None:  # Boolean field
         if not login and not attendance_record.signOutTime:
             attendance_record.signOutTime = get_perth_time().time()
         if login and attendance_record.signOutTime:
-            message = f"Student temporarily signed out between {str(attendance_record.signOutTime).split('.')[0]} and {str(get_perth_time().time()).split('.')[0]}"
-            if comments: 
-                comments = comments + f" | {message}"
+            # Check if other sessions need to be signed into
+            otherCurrentSessions = CheckStudentInOtherSessions(studentID, session)
+            if otherCurrentSessions is not None:
+                for s_dict in otherCurrentSessions :
+                    status = TransferStudentFromSession(s_dict['attendanceID'], session.sessionName)
+            message = f"Student temporarily signed out between {str(attendance_record.signOutTime).split('.')[0]} and {str(get_perth_time().time()).split('.')[0]}. "
+            if attendance_record.comments: 
+                attendance_record.comments += message
             else:
-                comments = message
+                attendance_record.comments = message
             attendance_record.signOutTime = None
 
     if consent is not None:  # Boolean field
@@ -457,7 +578,7 @@ def EditAttendance(sessionID, studentID, signInTime=None, signOutTime=None, logi
     if grade:
         attendance_record.marks = grade
 
-    attendance_record.comments = comments
+
 
     # Commit the changes to the database
     try:
@@ -482,6 +603,28 @@ def SignStudentOut(attendanceID):
 
     return True
 
+def TransferStudentFromSession(attendanceID, newSessionName):
+
+    attendance = db.session.query(Attendance).filter(Attendance.attendanceID == attendanceID).first()
+
+    if attendance is None:
+        return False
+
+    signOutTime = get_perth_time().time()
+    attendance.signOutTime = signOutTime
+
+    message = "Automatically signed out and transferred to " + newSessionName + " at " + signOutTime.strftime("%H:%M:%S") + ". "
+
+    if attendance.comments is None :
+        attendance.comments = message
+    else :
+        attendance.comments += message
+    
+    db.session.commit()
+
+    return True
+
+
 def RemoveSignOutTime(attendanceID):
 
     attendance = db.session.query(Attendance).filter(Attendance.attendanceID == attendanceID).first()
@@ -491,9 +634,9 @@ def RemoveSignOutTime(attendanceID):
 
     comments = attendance.comments
 
-    message = f"Student temporarily signed out between {str(attendance.signOutTime).split('.')[0]} and {str(get_perth_time().time()).split('.')[0]}"
+    message = f"Student temporarily signed out between {str(attendance.signOutTime).split('.')[0]} and {str(get_perth_time().time()).split('.')[0]}. "
     if comments: 
-        comments = comments + f" | {message}"
+        comments += message
     else:
         comments = message
     attendance.signOutTime = None

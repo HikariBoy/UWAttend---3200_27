@@ -253,7 +253,13 @@ def updatesession():
 
     set_updatesession_form_select_options(current_session, current_unit, form)
 
-    return flask.render_template('session.html', form=form, perth_time=formatted_perth_time, update=True, currentSession=current_session, unit=current_unit.unitCode)
+    signed_in_count = 0
+
+    attendances = GetAttendance(input_sessionID=current_session.sessionID)
+    for attendance in attendances :
+        signed_in_count = signed_in_count + 1 if not attendance.signOutTime else signed_in_count
+
+    return flask.render_template('session.html', form=form, perth_time=formatted_perth_time, update=True, currentSession=current_session, unit=current_unit.unitCode, signedinnum=signed_in_count)
 
 @app.route('/checksessionexists', methods=['POST'])
 @login_required
@@ -324,15 +330,14 @@ def checkstudentinothersession():
         # check if student has existing attendance (in this class) i.e this is not a sign-in, but a sign-out
         existing_attendance = GetAttendance(input_sessionID=session_id, studentID=studentID)
 
-        if existing_attendance :
-            return flask.jsonify({'result': "sign_out"})
+        if existing_attendance and existing_attendance[0]:
+            if existing_attendance[0].signOutTime is None :
+                return flask.jsonify({'result': "sign_out"})
 
-        otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
+        otherCurrentSessions = CheckStudentInOtherSessions(studentID, session)
 
         # if the student ID appears, and they haven't been signed out...
         if len(otherCurrentSessions) > 0 :
-            log_message("Student already in another session.")
-            
             return flask.jsonify({'result': "true", 'existingSessionName': otherCurrentSessions[0]['sessionName']})
         
         else :
@@ -875,51 +880,60 @@ def addunit():
 	    
     return flask.render_template('addunit.html', form=form)
 
-@app.route('/export', methods=['GET', 'POST'])
+@app.route('/exportUnit', methods=['GET','POST'])
 @login_required
-def export_data():
-    log_message("/export")
-
-    log_message("/export Attempting to Export Database...")
+def exportUnit():
+    log_message("/exportUnit")
     zip_filename = 'database.zip'
-
-    unit_code = flask.request.args.get('unitCode') or flask.request.form.get('unitCode')
+    requestID = flask.request.args.get('requestID') or flask.request.form.get('requestID')
 
     if (current_user.userType == 'facilitator') :
-        access_error('export', 'Export')
+        access_error('export', 'Unit')
         return redirect(url_for('home'))
-
+    
     # Get database.zip filepath
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     zip_path = os.path.join(project_root, zip_filename)
 
-    current_user_id = current_user.userID
-    current_user_type = current_user.userType
+    @after_this_request
+    def delete_database(response):
+        try:
+            os.remove(zip_path)
+            log_message("/export Temporary Database Deleted")
+        except Exception as e:
+            log_message(str(e))
+        return response
 
-    # Call the function to export all data to the 'database.zip'
-    export_all_to_zip(zip_filename, current_user_id, current_user_type)
-
-    # If "All Units" is selected or no unitCode is provided, skip filtering
-    if unit_code and unit_code != 'all':
-        filtered_zip_filename = filter_exported_csv_by_unit(zip_filename, unit_code)
-
-        # Rename the filtered file to database.zip for consistent download name
-        filtered_zip_path = os.path.join(project_root, filtered_zip_filename)
-        if os.path.exists(filtered_zip_path):
-            os.rename(filtered_zip_path, zip_path)  # Rename to database.zip
-
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Export all coordinator's  units
+        if requestID == 'ownUnits' :
+            for unit in current_user.unitsCoordinate :
+                exportUnitToZip(zip_filename, unit.unitID, unit.unitCode, zipf)
+        # Export all units
+        elif requestID == 'otherUnits' :
+            if (current_user.userType == 'admin') :
+                units = GetUnits()
+                if units :
+                    for unit in units :
+                        exportUnitToZip(zip_filename, unit.unitID, unit.unitCode, zipf)
+            else :
+                access_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
+        # Export specified unit
+        else :
+            if not (userHasCoordinatorAccessToUnitByID(requestID) or current_user.userType == 'admin') :
+                access_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
+            unit = GetUnit(unitID=requestID)
+            if unit :
+                unit = unit[0]
+                exportUnitToZip(zip_filename, requestID, unit.unitCode, zipf)
+            else :
+                database_error('export', 'Unit')
+                return redirect(url_for('unitconfig'))
 
     # Check if the file was created successfully
     if os.path.exists(zip_path):
-        @after_this_request
-        def delete_database(response):
-            try:
-                os.remove(zip_path)
-                log_message("/export Temporary Database Deleted")
-            except Exception as e:
-                log_message(str(e))
-            return response
-
         # Serve the zip file for download
         response = send_file(zip_path, as_attachment=True)
         log_message("/export Admin Successfully Exported Database")
@@ -928,7 +942,6 @@ def export_data():
     else:
         # Handle the error if the zip file doesn't exist
         return "Error: Could not export the data.", 500
-
 
 # STUDENT - /student/
 @app.route('/student', methods=['POST'])
@@ -1026,6 +1039,31 @@ def remove_from_session():
         
     return flask.redirect(flask.url_for('home'))
 
+@app.route('/profile', methods=['GET','POST'])
+@login_required
+def profile():
+    log_message("/profile")
+   
+    form = ProfileForm()
+
+    if form.validate_on_submit():
+        fname = form.firstName.data
+        lname = form.lastName.data
+        if fname == "" :
+            fname = "placeholder"
+        if lname == "" :
+            lname = "placeholder"
+        EditUserNames(current_user.userID, fname, lname)
+        
+        return flask.redirect(flask.url_for('profile'))
+
+    email = current_user.email
+    accountType = current_user.userType
+    fname = current_user.firstName
+    lname = current_user.lastName
+
+    return flask.render_template('profile.html', form=form, email=email, accountType=accountType, fname=fname, lname=lname)
+
 # CREATE ACCOUNT - /create_account
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_account():
@@ -1069,8 +1107,6 @@ def create_account():
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     log_message("/forgot_password")
-    if current_user.is_authenticated:
-        return flask.redirect('home')
 
     if flask.request.method == 'POST':
         email = flask.request.form.get('resetEmail')
@@ -1245,15 +1281,18 @@ def add_student():
                         flask.flash(f"Error signing out {student.preferredName} {student.lastName}", 'error')
                 else:
                     status = RemoveSignOutTime(attendanceID=existing_attendance[0].attendanceID)
+                    otherCurrentSessions = CheckStudentInOtherSessions(studentID, session)
+                    if otherCurrentSessions is not None:
+                        for s_dict in otherCurrentSessions :
+                            status = TransferStudentFromSession(s_dict['attendanceID'], session.sessionName)
                 return flask.redirect(flask.url_for('home'))
             
-            otherCurrentSessions = checkStudentInOtherSessions(studentID, session)
+            otherCurrentSessions = CheckStudentInOtherSessions(studentID, session)
 
             if otherCurrentSessions is not None :
                 # sign them out of the other sesssion that they are in
                 for s_dict in otherCurrentSessions :
-                    status = SignStudentOut(s_dict['attendanceID'])
-                    print('signed student out of that other class...')
+                    status = TransferStudentFromSession(s_dict['attendanceID'], session.sessionName)
 
             # consent will be none if it is already yes or not required i.e. no changes required
             if consent_status != "none" :
