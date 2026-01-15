@@ -1349,7 +1349,9 @@ def add_staff():
         if unit in current_user.unitsCoordinate or current_user.userType == 'admin':
             user = GetUser(email=email)
             if user is None :
-                if AddUser(email, "placeholder", "placeholder", generate_temp_password(), "facilitator") :
+                if userType == "coordinator" :
+                    flask.flash("No coordinator account matching that email - contact admin to add that user as a coordinator", 'error')
+                elif AddUser(email, "placeholder", "placeholder", generate_temp_password(), "facilitator") :
                     if send_email_ses("noreply@uwaengineeringprojects.com", email, 'welcome') :
                         flask.flash("User added", 'success')
                     else :
@@ -1359,13 +1361,15 @@ def add_staff():
                     return redirect(url_for('updateunit'))
                 
                 user = GetUser(email=email)
-
-            if userType == 'facilitator' :
-                if unit not in user.unitsFacilitate :
-                    AddUnitToFacilitator(email, unit_id)
-            else :
-                if unit not in user.unitsCoordinate :
-                    AddUnitToCoordinator(email, unit_id)
+            if user :
+                if userType == 'facilitator' :
+                    if unit not in user.unitsFacilitate :
+                        AddUnitToFacilitator(email, unit_id)
+                else : # trying to add coordinator
+                    if user.userType == 'facilitator' :
+                        flask.flash("No coordinator account matching that email - contact admin to add that user as a coordinator", 'error')
+                    elif unit not in user.unitsCoordinate :
+                        AddUnitToCoordinator(email, unit_id)
 
     staff = []
 
